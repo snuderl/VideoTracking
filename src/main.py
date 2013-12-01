@@ -8,8 +8,9 @@ import utils
 import os
 from utils import measureTime
 from skimage.transform import integral_image
+import pysomemodule
 
-directory = "../data/"
+directory = ""
 ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
@@ -22,10 +23,12 @@ target = (200, 110, 50, 55)
 
 capture = cv2.VideoCapture(directory + filename + ext)
 
+abc = pysomemodule.ABC("ab")
 
 cv2.namedWindow("video")
 cv2.namedWindow("particle")
 
+cv2.namedWindow("test")
 
 def onMouse(event, x, y, a, b):
     if event == 1:
@@ -61,8 +64,13 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     negative = np.array(list(generator))
     examples = np.vstack((negative, positive))
 
-    feature_vector = haar.calculateFeatureVector(
-        image, examples, features, pf.target, out=False)
+    image = image.astype(np.float32)
+    features = features.astype(np.float32)
+    examples = examples.astype(np.float32)
+
+    feature_vector = np.nan_to_num(abc.doSomething(
+        image.astype(np.float32), examples.astype(np.float32), features.astype(np.float32), allFeatures))
+    #print feature_vector, feature_vector.dtype
     if not neg == None:
         if neg.shape[0] < 120:
             neg = np.vstack((neg, feature_vector[:-1, :]))
@@ -102,18 +110,18 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
     with measureTime("Updating particles"):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
-        particle_features = haar.calculateFeatureVector(
-            image, pf.particles, features, pf.target, indices=indices)
+        particle_features = abc.doSomething(
+            image.astype(np.float32), pf.particles.astype(np.float32), features.astype(np.float32), indices)
     scores = adaBoost.score(particle_features)[:, 1]
     # print adaBoost.score(train)
-    print scores.max(), adaBoost.predict(particle_features).sum()
+    # print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
     #drawParticle(image, pf.particles[scores.argmax()])
-    targetVector = haar.calculateFeatureVector(
-        image, np.array([pf.target]), features, pf.target, indices=None)
+    targetVector = np.nan_to_num(abc.doSomething(
+        image.astype(np.float32), np.array([pf.target]).astype(np.float32), features.astype(np.float32), allFeatures))
     targetScore = adaBoost.score(targetVector)
     targetClass = adaBoost.predict(targetVector)
-    print "Target probability: {}, Class:{}".format(targetScore, targetClass)
+    #print "Target probability: {}, Class:{}".format(targetScore, targetClass)
     # print np.max(scores)
     # print particles[:,6]
     with measureTime("Generating new samples:"):
@@ -129,31 +137,34 @@ def start(image):
         os.makedirs(directory)
 
     # Initialize particles
-    pf = particle.ParticleFilter(target, 1000, image.shape[:2])
+    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
     # Generate haar features
-    features = haar.generateHaarFeatures(150)
+    features = haar.generateHaarFeatures(featuresCount)
+    #print features
 
     return target, pf, features
 
-
+featuresCount = 100
+allFeatures = np.array(list(range(0,featuresCount*3)))
 iterationCount = 0
 if __name__ == "__main__":
     pos, neg = None, None
     print pos
     if(capture.isOpened):
-        open("out/{}/output.txt".format(filename), "w")
+        #open("out/{}/output.txt".format(filename), "w")
         retval, image = capture.read()
         target, pf, features = start(image)
         pos, neg = generateNewSamples(image, pf, features, pos, neg, 100)
         pos, neg = iteration(image, pf, features, pos, neg)
         target = pf.target
+
+	p = abc.test(image, target.astype(np.float32))
+	cv2.imshow("test", p)
     while retval:
 
-        if iterationCount == 150:
-            break
 
         cv2.imshow("video", image)
-        key = cv2.waitKey(500) & 0xFF
+        key = cv2.waitKey(50) & 0xFF
         if key == ord('q'):
             break
         if key == ord('c'):
@@ -180,9 +191,9 @@ if __name__ == "__main__":
         target = pf.target
 
 
-        directory =  "out/{}".format(filename)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        #directory =  "out/{}".format(filename)
+        #if not os.path.exists(directory):
+        #    os.makedirs(directory)
         cv2.imwrite(
             "out/{}/target{}.jpg".format(filename, iterationCount),
             utils.cropImage(image, target))
@@ -193,13 +204,6 @@ if __name__ == "__main__":
         cv2.imwrite(
             "out/{}/image{}.jpg".format(filename, iterationCount),
             image)
-
-        with open("out/{}/output.txt".format(filename), "a") as f:
-            f.write("{},{},{},{}\n".format(
-                target[0],
-                target[1],
-                target[2],
-                target[3]))
 
 
 
