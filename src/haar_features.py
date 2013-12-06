@@ -1,0 +1,104 @@
+import numpy as np
+from numpy import random
+from matplotlib.pyplot import *
+import matplotlib.collections as collections
+from matplotlib.colors import ColorConverter
+import cv2
+
+
+### We represent a center surrond haar feature
+### as an array of 4 points and a color selector
+### [x1,y1,x2,y2,x3,y3,x4,y4]
+### First 2 points represent the outer dimensions, 
+### while last 2 represent the inner dimensions 
+### of haar feature detecter
+### 
+### Since all haar features will be translated to object space
+### we define all ther coordinates in range [0-1] to faciliate this.
+
+def generateHaarFeatures(number):
+	prototype = np.array([0,0,1,1, 0.25,0.25, 0.5, 0.5])
+
+	scale = random.uniform(0.1, 0.5, (number, 1))
+
+	protoypes = np.tile(prototype, (number, 1))*scale
+
+	translation = random.uniform(0,0.9, (number, 2))
+	protoypes[:, 0:2] += translation
+	protoypes[:, 4:6] += translation
+
+	###If generated features lies outside of range [0,1] translate it back inside
+	for row in protoypes:
+		if row[0]+row[2] > 1:
+			move = row[0]+row[2]-1
+			row[0] -= move
+			row[4] -= move
+		if row[1]+row[3] > 1:
+			move = row[1]+row[3]-1
+			row[1] -= move
+			row[5] -= move
+
+	return protoypes
+
+def calculateValues(rectangle, haar_features):
+	'''This functions expects an integral image as input'''
+
+	height, width, colors = rectangle.shape
+	x = haar_features[:,::2]*height
+	y = haar_features[:,1::2]*width
+
+
+
+	coords1x = x[:,0]+x[:,1]
+	coords1y = y[:,0]+y[:,1]
+	coords2x = x[:,2]+x[:,3]
+	coords2y = y[:,2]+y[:,3]
+
+	values = np.zeros((haar_features.shape[0], colors))
+
+	for i in range(haar_features.shape[0]):
+		#print height
+		#print x,h
+		#print coords1,coords2
+		areaOuterBig = cv2.getRectSubPix(rectangle, (1,1), (coords1x[i],coords1y[i]))
+		areaOuterSmall = cv2.getRectSubPix(rectangle, (1,1), (x[i,0],y[i,0]))
+		outer = areaOuterBig - areaOuterSmall
+
+		#print x,h
+		#print coords1,coords2
+		areaInnerBig = cv2.getRectSubPix(rectangle, (1,1), (coords2x[i],coords2y[i]))
+		areaInnerSmall = cv2.getRectSubPix(rectangle, (1,1), (x[i,2],y[i,2]))
+		inner = areaInnerBig - areaInnerSmall
+		values[i,: ] = outer - 2 * inner
+
+	#print outer, inner
+
+	return values
+
+
+def visualizeHaarFeatures():
+	fig = figure()
+	ax=fig.add_subplot(111)
+	ax.set_xlim([0, 1]) #pylab.xlim([-400, 400])
+	ax.set_ylim([0, 1]) #pylab.ylim([-400, 400])
+	patches = []	
+
+	cc = ColorConverter()
+	outer = cc.to_rgba("#BFCBDE", alpha=0.5)
+	inner = cc.to_rgba("RED", alpha=0.5)
+
+	for row in generateHaarFeatures(20):
+		patches.append(gca().add_patch(Rectangle((row[0], row[1]),row[2], row[3],color=outer)))	
+		patches.append(gca().add_patch(Rectangle((row[4], row[5]),row[6], row[7],color=inner)))	
+	p = collections.PatchCollection(patches)
+
+	patches = ax.add_collection(p)
+
+	show()
+
+
+#print calculateValue(testImage, testHaar)
+
+
+#print generateHaarFeatures(2)
+#visualizeHaarFeatures()
