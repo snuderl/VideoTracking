@@ -1,8 +1,9 @@
-Dependcies:
-Python 2.7.x 32bit
-OpenCV
-Numpy
-Scipy
+Dependencies:
+	Python 2.7
+	Numpy
+	Scipy
+	Scipy-Learn
+	OpenCV
 
 Haar-like feature detection:
 	imamo kvadrat z manjšim poljem temne barve

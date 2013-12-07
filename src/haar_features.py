@@ -40,12 +40,15 @@ def generateHaarFeatures(number):
 
 	return protoypes
 
+###TODO: This function should be implemented using cv.remap,
+### which would enable us to inteprolate without looping,
+### or pershaps using numpys meshgrid
 def calculateValues(rectangle, haar_features):
 	'''This functions expects an integral image as input'''
 
-	height, width, colors = rectangle.shape
-	x = haar_features[:,::2]*height
-	y = haar_features[:,1::2]*width
+	height,width,colors = rectangle.shape
+	x = haar_features[:,::2]*(height-1)
+	y = haar_features[:,1::2]*(width-1)
 
 
 
@@ -57,21 +60,28 @@ def calculateValues(rectangle, haar_features):
 	values = np.zeros((haar_features.shape[0], colors))
 
 	for i in range(haar_features.shape[0]):
-		#print height
-		#print x,h
-		#print coords1,coords2
-		areaOuterBig = cv2.getRectSubPix(rectangle, (1,1), (coords1x[i],coords1y[i]))
-		areaOuterSmall = cv2.getRectSubPix(rectangle, (1,1), (x[i,0],y[i,0]))
-		outer = areaOuterBig - areaOuterSmall
+		x1,y1 = x[i,0],y[i,0]
+		x2,y2 = coords1x[i],coords1y[i]
+		D = cv2.getRectSubPix(rectangle, (1,1), (x2,y2))
+		A = cv2.getRectSubPix(rectangle, (1,1), (x1,y1))
+		B = cv2.getRectSubPix(rectangle, (1,1), (x1,y2))
+		C = cv2.getRectSubPix(rectangle, (1,1), (y2,x1))
+		areaOuter = D + A - B - C
+		# print x1,y1,x2,y2
+		# print D,A,B,C
+		# print areaOuter
 
-		#print x,h
-		#print coords1,coords2
-		areaInnerBig = cv2.getRectSubPix(rectangle, (1,1), (coords2x[i],coords2y[i]))
-		areaInnerSmall = cv2.getRectSubPix(rectangle, (1,1), (x[i,2],y[i,2]))
-		inner = areaInnerBig - areaInnerSmall
-		values[i,: ] = outer - 2 * inner
-
-	#print outer, inner
+		x1,y1 = x[i,2],y[i,2]
+		x2,y2 = coords2x[i],coords2y[i]
+		D = cv2.getRectSubPix(rectangle, (1,1), (x2,y2))
+		A = cv2.getRectSubPix(rectangle, (1,1), (x1,y1))
+		B = cv2.getRectSubPix(rectangle, (1,1), (x1,y2))
+		C = cv2.getRectSubPix(rectangle, (1,1), (y2,x1))
+		areaInner = D + A - B - C
+		values[i,: ] = areaOuter - 2 * areaInner
+		# print x1,y1,x2,y2
+		# print D,A,B,C
+		# print areaInner
 
 	return values
 
@@ -87,7 +97,7 @@ def visualizeHaarFeatures():
 	outer = cc.to_rgba("#BFCBDE", alpha=0.5)
 	inner = cc.to_rgba("RED", alpha=0.5)
 
-	for row in generateHaarFeatures(20):
+	for row in generateHaarFeatures(50):
 		patches.append(gca().add_patch(Rectangle((row[0], row[1]),row[2], row[3],color=outer)))	
 		patches.append(gca().add_patch(Rectangle((row[4], row[5]),row[6], row[7],color=inner)))	
 	p = collections.PatchCollection(patches)
@@ -102,3 +112,18 @@ def visualizeHaarFeatures():
 
 #print generateHaarFeatures(2)
 #visualizeHaarFeatures()
+
+def testHaarFeatureCalculation():
+	test = np.array([[5,2,5,2],[3,6,3,6],[5,2,5,2],[3,6,3,6]])
+	test2 = np.array([[5,2],[3,6]])
+	integral = np.array([[0,0,0,0,0], [0,5,7,12,14],[0,8,16,24,32],[0,13,23,36,46],[0,16,32,48,64]]).astype(np.float32).reshape((5,5,1))
+
+	integral = cv2.integral(test.astype(np.float32)).astype(np.float32).reshape((5,5,1))
+	feature = np.array([0,0,1,1, 0.25,0.25,0.5,0.5]).reshape(1,8)
+	print calculateValues(integral, feature)
+	print "--------------"
+	integral = cv2.integral(test2.astype(np.float32)).astype(np.float32).reshape((3,3,1))
+
+	feature = np.array([0,0,1,1, 0.5,0.5,0.5,0.5]).reshape(1,8)
+	print calculateValues(integral, feature)
+print testHaarFeatureCalculation()
