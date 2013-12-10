@@ -46,12 +46,15 @@ def generateHaarFeatures(number):
 def calculateValues(rectangle, haar_features, indices=None):
     '''This functions expects an integral image as input'''
 
+
     height,width,colors = rectangle.shape
-    rectangle = cv2.resize(rectangle, (24,24))
-    x = haar_features[:,::2]*24
-    y = haar_features[:,1::2]*24
+    x = haar_features[:,::2]*rectangle.shape[0]
+    y = haar_features[:,1::2]*rectangle.shape[1]
 
 
+    # rectangle = cv2.resize(rectangle, (50,50))
+    # x = haar_features[:,::2]*25
+    # y = haar_features[:,1::2]*25
 
 
     coords1x = x[:,0]+x[:,1]

@@ -46,12 +46,12 @@ class ParticleFilter():
         ###TODO update weight
 
     def updateWeights(self, scores):
-        lam = 20
+        lam = 30
         ###We have to clip the scores so they dont get to big after exponiating.
         ###They should be between 0 and 1 regardles...
         #print scores
         print np.max(scores)
-        scores = np.clip(scores,0,1.)
+        np.clip(scores, 0, 1., scores)
         scores = np.exp(lam*scores)
         total = np.sum(scores)
         self.particles[:,6] = scores/total

@@ -90,12 +90,15 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     feature_vector = calculateFeatureVector(image, examples, features, pf.target, out=False)
     if not neg == None:
         neg = np.vstack((neg, feature_vector[:-1,:]))
-        pos = np.vstack((pos, feature_vector[-1,:].reshape(1,450)))
+        positive = feature_vector[-1,:].reshape(1, feature_vector.shape[1])
+        pos = np.vstack((pos, positive))
 
     else:
         neg = feature_vector[:-1,:]
-        pos = feature_vector[-1,:].reshape(1,450)
+        positive = feature_vector[-1,:].reshape(1, feature_vector.shape[1])
+        pos = np.vstack((positive, positive, positive))
 
+    print pos.shape
     return pos, neg
 
 
@@ -118,11 +121,14 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(image, pf.particles, features, pf.target, indices=indices)
     scores = adaBoost.predict_proba(particle_features)[:,1]
-    print adaBoost.predict_proba(particle_features), adaBoost.predict(particle_features).sum()
+    print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
 
     #drawParticle(image, pf.particles[scores.argmax()])
-
+    targetVector = calculateFeatureVector(image, np.array([pf.target]), features, pf.target, indices=indices)
+    targetScore = adaBoost.predict_proba(targetVector)[:1]
+    targetClass = adaBoost.predict(targetVector)
+    print "Target probability: {}, Class:{}".format(targetScore, targetClass)
     #print np.max(scores)
     #print particles[:,6]
     with measureTime("Generating new samples:"):
@@ -133,7 +139,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
 def start(image):
     ###Initialize particles
-    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
+    pf = particle.ParticleFilter(target, 2500, image.shape[:2])
     ###Generate haar features
     features = haar.generateHaarFeatures(150)
 
@@ -143,10 +149,12 @@ def start(image):
 iterationCount = 0
 if __name__ == "__main__":
     pos, neg = None, None
+    print pos
     if(capture.isOpened):
         retval, image = capture.read()
         target, pf, features = start(image)
         pos, neg = generateNewSamples(image, pf, features, pos, neg, 100)
+        pos, neg = iteration(image, pf, features, pos, neg)
         target = pf.target
     while retval:
 
