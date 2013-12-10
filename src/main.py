@@ -13,8 +13,8 @@ target = (200, 110, 50, 55)
 filename = "../data/Vid_B_cup.avi"
 target = (0.38960*320, 0.384615*240, 0.146011*320, 0.2440651*240)
 
-filename = "../data/Vid_D_person.avi"
-target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
+# filename = "../data/Vid_D_person.avi"
+# target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
 capture = cv2.VideoCapture(filename)
 
@@ -123,7 +123,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(image, pf.particles, features, pf.target, indices=indices)
-    scores = adaBoost.predict(particle_features)
+    scores = adaBoost.predict_proba(particle_features)
     pf.updateWeights(scores)
 
     #drawParticle(image, pf.particles[scores.argmax()])
@@ -133,17 +133,9 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
     return pos, neg
 
 
-
-
-
-
-
-
-
-
 def start(image):
     ###Initialize particles
-    pf = particle.ParticleFilter(target, 2500, image.shape[:2])
+    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
     ###Generate haar features
     features = haar.generateHaarFeatures(150)
 
