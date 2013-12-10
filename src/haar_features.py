@@ -50,6 +50,8 @@ def generateHaarFeatures(number):
 def calculateValues(rectangle, haar_features, indices=None):
     '''This functions expects an integral image as input'''
 
+    rectangle = cv2.integral(rectangle).astype(np.float32)
+    #print rectangle.shape
     height, width, colors = rectangle.shape
     x = haar_features[:, ::2] * rectangle.shape[0]
     y = haar_features[:, 1::2] * rectangle.shape[1]
@@ -57,10 +59,10 @@ def calculateValues(rectangle, haar_features, indices=None):
     # rectangle = cv2.resize(rectangle, (50,50))
     # x = haar_features[:,::2]*25
     # y = haar_features[:,1::2]*25
-    coords1x = x[:, 0] + x[:, 1]
-    coords1y = y[:, 0] + y[:, 1]
-    coords2x = x[:, 2] + x[:, 3]
-    coords2y = y[:, 2] + y[:, 3]
+    coords1x = x[:, 0] + x[:, 1]/2
+    coords1y = y[:, 0] + y[:, 1]/2
+    coords2x = x[:, 2] + x[:, 3]/2
+    coords2y = y[:, 2] + y[:, 3]/2
 
     values = np.zeros((haar_features.shape[0] * colors))
     if not indices == None:
@@ -147,6 +149,7 @@ def visualizeHaarFeatures():
 # print generateHaarFeatures(2)
 if __name__ == "__main__":
     visualizeHaarFeatures()
+    print testHaarFeatureCalculation()
 
 
 def testHaarFeatureCalculation():
@@ -165,4 +168,3 @@ def testHaarFeatureCalculation():
 
     feature = np.array([0, 0, 1, 1, 0.5, 0.5, 0.5, 0.5]).reshape(1, 8)
     print calculateValues(integral, feature)
-print testHaarFeatureCalculation()

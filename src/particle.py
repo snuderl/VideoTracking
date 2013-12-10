@@ -1,12 +1,12 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4 / 5
+SIGMA_velocity = 6.4
 SIGMA_size = 0.64
 
 # State is represented as a numpy array
 ### [x, y, w, h, vx, vy, weight]
-MAX_velocity = 20
+MAX_velocity = 35
 
 
 class ParticleFilter():

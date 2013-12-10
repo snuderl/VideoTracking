@@ -44,7 +44,7 @@ def cropImage(image, rectangle):
     x, y = rectangle[0], rectangle[1]
     h, w = rectangle[2], rectangle[3]
     return cv2.getRectSubPix(image.astype(np.uint8),
-                             (int(h), int(w)), (x + h / 2, y + h / 2))
+                             (int(h), int(w)), (x + h / 2, y + w / 2))
 
 
 def calculateFeatureVector(image,
@@ -54,14 +54,14 @@ def calculateFeatureVector(image,
                            out=False,
                            indices=None):
 
-    integral = cv2.integral(image)
     # print integral
     features = np.zeros((particles.shape[0],
                         haar_features.shape[0] * image.shape[2]))
     cv2.imwrite("out/target{}.jpg".format(iterationCount),
                 cropImage(image, target))
+    #print "integral", cv2.integral(image).shape
     for i, particle in enumerate(particles):
-        particle_image = cropImage(integral, particle)
+        particle_image = cropImage(image, particle)
         calculated = haar.calculateValues(
             particle_image, haar_features, indices=indices).ravel()
         # print calculated.shape
@@ -145,7 +145,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
 def start(image):
     # Initialize particles
-    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
+    pf = particle.ParticleFilter(target, 1000, image.shape[:2])
     # Generate haar features
     features = haar.generateHaarFeatures(200)
 
