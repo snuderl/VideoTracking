@@ -22,16 +22,17 @@ cv2.namedWindow("video")
 cv2.namedWindow("particle")
 
 
-
-def onMouse(event, x,y, a, b):
-    if event==1:
-        print event,x,y
+def onMouse(event, x, y, a, b):
+    if event == 1:
+        print event, x, y
 
 cv2.setMouseCallback("video", onMouse, param=None)
 
 
 def drawTarget(image, target):
-    cv2.rectangle(image, (int(target[0]), int(target[1])), (int(target[0]+target[2]), int(target[1]+target[3])), 4)
+    cv2.rectangle(image, (int(target[0]), int(target[1])), (
+        int(target[0] + target[2]), int(target[1] + target[3])), 4)
+
 
 def drawParticle(image, target):
     image = image.copy()
@@ -43,9 +44,7 @@ def cropImage(image, rectangle):
     x, y = rectangle[0], rectangle[1]
     h, w = rectangle[2], rectangle[3]
     return cv2.getRectSubPix(image.astype(np.uint8),
-                             (int(h), int(w)), (x+h/2, y+h/2))
-
-
+                             (int(h), int(w)), (x + h / 2, y + h / 2))
 
 
 def calculateFeatureVector(image,
@@ -56,16 +55,17 @@ def calculateFeatureVector(image,
                            indices=None):
 
     integral = cv2.integral(image)
-    #print integral
+    # print integral
     features = np.zeros((particles.shape[0],
-                        haar_features.shape[0]*image.shape[2]))
+                        haar_features.shape[0] * image.shape[2]))
     cv2.imwrite("out/target{}.jpg".format(iterationCount),
-                      cropImage(image, target))
+                cropImage(image, target))
     for i, particle in enumerate(particles):
         particle_image = cropImage(integral, particle)
-        calculated = haar.calculateValues(particle_image, haar_features, indices=indices).ravel()
-        #print calculated.shape
-        #print calculated.shape
+        calculated = haar.calculateValues(
+            particle_image, haar_features, indices=indices).ravel()
+        # print calculated.shape
+        # print calculated.shape
         features[i, :] = calculated
         if out:
             directory = "out/iteration{}".format(iterationCount)
@@ -73,9 +73,10 @@ def calculateFeatureVector(image,
                 os.makedirs(directory)
             particle_image_orig = cropImage(image, particle)
             name = "/rect{}.jpg".format(i)
-            cv2.imwrite(directory+name, particle_image_orig)
+            cv2.imwrite(directory + name, particle_image_orig)
 
     return features
+
 
 def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     positive = pf.target.reshape((1, 4))
@@ -87,16 +88,17 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     negative = np.array(list(generator))
     examples = np.vstack((negative, positive))
 
-    feature_vector = calculateFeatureVector(image, examples, features, pf.target, out=False)
+    feature_vector = calculateFeatureVector(
+        image, examples, features, pf.target, out=False)
     if not neg == None:
-        neg = np.vstack((neg, feature_vector[:-1,:]))
-        positive = feature_vector[-1,:].reshape(1, feature_vector.shape[1])
+        neg = np.vstack((neg, feature_vector[:-1, :]))
+        positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
         pos = np.vstack((pos, positive))
 
     else:
-        neg = feature_vector[:-1,:]
-        positive = feature_vector[-1,:].reshape(1, feature_vector.shape[1])
-        pos = np.vstack((positive, positive, positive))
+        neg = feature_vector[:-1, :]
+        positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
+        pos = np.vstack((positive, positive))
 
     print pos.shape
     return pos, neg
@@ -104,44 +106,48 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
 
 def iteration(image, pf, features, pos, neg, newSamples=5):
     train = np.vstack((pos, neg))
-    targets = np.zeros((pos.shape[0]+neg.shape[0]))
-    targets[:pos.shape[0]]=1
+    targets = np.zeros((pos.shape[0] + neg.shape[0]))
+    targets[:pos.shape[0]] = 1
 
-    adaBoost = learner.initialize(32)
+    adaBoost = learner.Trainer(32)
+
     with measureTime("Ada boost learning"):
-        adaBoost.fit(train, targets)
-        indices = adaBoost.feature_importances_.argsort()[-32:][::-1]
-        #print targets
+        adaBoost.train(train, targets)
+        indices = adaBoost.features()
+        # print targets
 
-    #print feature_vector
+    # print feature_vector
     #probabilities = adaBoost.predict_proba(feature_vector)[:,1]
 
     with measureTime("Updating particles"):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
-        particle_features = calculateFeatureVector(image, pf.particles, features, pf.target, indices=indices)
-    scores = adaBoost.predict_proba(particle_features)[:,1]
+        particle_features = calculateFeatureVector(
+            image, pf.particles, features, pf.target, indices=indices)
+    scores = adaBoost.score(particle_features)[:, 1]
+    #print adaBoost.score(train)
     print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
-
     #drawParticle(image, pf.particles[scores.argmax()])
-    targetVector = calculateFeatureVector(image, np.array([pf.target]), features, pf.target, indices=indices)
-    targetScore = adaBoost.predict_proba(targetVector)[:1]
+    targetVector = calculateFeatureVector(
+        image, np.array([pf.target]), features, pf.target, indices=indices)
+    targetScore = adaBoost.score(targetVector)
     targetClass = adaBoost.predict(targetVector)
     print "Target probability: {}, Class:{}".format(targetScore, targetClass)
-    #print np.max(scores)
-    #print particles[:,6]
+    # print np.max(scores)
+    # print particles[:,6]
     with measureTime("Generating new samples:"):
-        pos, neg = generateNewSamples(image, pf, features, pos, neg, newSamples)
+        pos, neg = generateNewSamples(
+            image, pf, features, pos, neg, newSamples)
 
     return pos, neg
 
 
 def start(image):
-    ###Initialize particles
-    pf = particle.ParticleFilter(target, 2500, image.shape[:2])
-    ###Generate haar features
-    features = haar.generateHaarFeatures(150)
+    # Initialize particles
+    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
+    # Generate haar features
+    features = haar.generateHaarFeatures(200)
 
     return target, pf, features
 
@@ -168,6 +174,9 @@ if __name__ == "__main__":
         iterationCount += 1
         with measureTime("Iteration {}".format(iterationCount)):
             pos, neg = iteration(image, pf, features, pos, neg)
+        text = "Iteration {}".format(iterationCount)
+        cv2.putText(image, text, (
+            20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
         # for p in pf.particles:
         #     drawParticle(image, p)
         #     displayParticles = True
@@ -183,6 +192,6 @@ if __name__ == "__main__":
         drawTarget(image, target)
         drawParticle(image, target)
 
-        #for x in pf.particles:
+        # for x in pf.particles:
             #drawTarget(image, x)
         print "Iterations: {0}".format(pf.iterations)
