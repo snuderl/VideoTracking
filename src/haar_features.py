@@ -15,18 +15,21 @@ import cv2
 ### Since all haar features will be translated to object space
 ### we define all ther coordinates in range [0-1] to faciliate this.
 
-def generateHaarFeatures(number):
-    prototype = np.array([0,0,1,1, 0.25,0.25, 0.5, 0.5])
 
-    scale = random.uniform(0.1, 0.5, (number, 1))
+def generateHaarFeatures(number):
+    prototype = np.array(
+        [0, 0, 1, 1, 0.25, 0.25, 0.5, 0.5])
+
+    scale = random.uniform(0.2, 0.6, (number, 1))
 
     protoypes = np.tile(prototype, (number, 1))*scale
 
-    translation = random.uniform(0,0.9, (number, 2))
+    translation = random.uniform(0, 0.8, (number, 2))
     protoypes[:, 0:2] += translation
     protoypes[:, 4:6] += translation
 
-    ###If generated features lies outside of range [0,1] translate it back inside
+    ### If generated features lies outside
+    ### of range [0,1] translate it back inside
     for row in protoypes:
         if row[0]+row[2] > 1:
             move = row[0]+row[2]-1

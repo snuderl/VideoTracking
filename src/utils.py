@@ -27,8 +27,8 @@ def rectangleGenerator(height,
                        width,
                        num,
                        invalid=[-100, -100, 1, 1]):
-    print "rectangleGenerator"
-    print invalid
+    #print "rectangleGenerator"
+    #qprint invalid
     l = []
     i = 0
     targetRect = Rect(invalid[0], invalid[1], invalid[2], invalid[3])

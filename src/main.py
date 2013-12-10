@@ -4,12 +4,17 @@ import haar_features as haar
 import numpy as np
 import learner
 import utils
-import scipy
 import os
-from utils import timeit, measureTime
-from joblib import Parallel
+from utils import measureTime
 
 filename = "../data/Vid_A_ball.avi"
+target = (200, 110, 50, 55)
+
+filename = "../data/Vid_B_cup.avi"
+target = (0.38960*320, 0.384615*240, 0.146011*320, 0.2440651*240)
+
+filename = "../data/Vid_D_person.avi"
+target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
 capture = cv2.VideoCapture(filename)
 
@@ -43,7 +48,6 @@ def cropImage(image, rectangle):
 
 
 
-@timeit
 def calculateFeatureVector(image,
                            particles,
                            haar_features,
@@ -55,11 +59,8 @@ def calculateFeatureVector(image,
     #print integral
     features = np.zeros((particles.shape[0],
                         haar_features.shape[0]*image.shape[2]))
-    scipy.misc.imsave("out/target{}.jpg".format(iterationCount),
+    cv2.imwrite("out/target{}.jpg".format(iterationCount),
                       cropImage(image, target))
-
-    features = np.zeros((particles.shape[0], haar_features.shape[0]*image.shape[2]))
-    scipy.misc.imsave("out/target{}.jpg".format(iterationCount), cropImage(image,target))
     for i, particle in enumerate(particles):
         particle_image = cropImage(integral, particle)
         calculated = haar.calculateValues(particle_image, haar_features, indices=indices).ravel()
@@ -72,12 +73,11 @@ def calculateFeatureVector(image,
                 os.makedirs(directory)
             particle_image_orig = cropImage(image, particle)
             name = "/rect{}.jpg".format(i)
-            scipy.misc.imsave(directory+name, particle_image_orig)
+            cv2.imwrite(directory+name, particle_image_orig)
 
     return features
 
 
-@timeit
 def iteration(image, pf, features, pos, neg, newSamples=5):
     positive = pf.target.reshape((1, 4))
     generator = utils.rectangleGenerator(
@@ -123,7 +123,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(image, pf.particles, features, pf.target, indices=indices)
-    scores = adaBoost.predict_proba(particle_features)[:,1]
+    scores = adaBoost.predict(particle_features)
     pf.updateWeights(scores)
 
     #drawParticle(image, pf.particles[scores.argmax()])
@@ -142,9 +142,8 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
 
 def start(image):
-    target = (200,110,50,55)
     ###Initialize particles
-    pf = particle.ParticleFilter(target, 2000, image.shape[:2])
+    pf = particle.ParticleFilter(target, 2500, image.shape[:2])
     ###Generate haar features
     features = haar.generateHaarFeatures(150)
 
@@ -157,7 +156,8 @@ if __name__ == "__main__":
     if(capture.isOpened):
         retval, image = capture.read()
         target, pf, features = start(image)
-        pos, neg = iteration(image, pf, features, pos, neg, newSamples=100)
+        with measureTime("Iteration {}".format(iterationCount)):
+            pos, neg = iteration(image, pf, features, pos, neg, newSamples=100)
         target = pf.target
     while retval:
 
@@ -169,7 +169,8 @@ if __name__ == "__main__":
             pass
         retval, image = capture.read()
         iterationCount += 1
-        pos, neg = iteration(image, pf, features, pos, neg)
+        with measureTime("Iteration {}".format(iterationCount)):
+            pos, neg = iteration(image, pf, features, pos, neg)
         # for p in pf.particles:
         #     drawParticle(image, p)
         #     displayParticles = True
