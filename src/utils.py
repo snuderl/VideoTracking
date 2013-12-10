@@ -1,27 +1,49 @@
 import numpy as np
 import numpy.random as random
-from itertools import islice
 from pygame import Rect
+import time
+from contextlib import contextmanager
 
 
+@contextmanager
+def measureTime(title):
+    t1 = time.clock()
+    yield
+    t2 = time.clock()
+    print '%s: %0.2f seconds elapsed' % (title, t2-t1)
 
-def rectangleGenerator(height,width,num,invalid=[-100,-100,1,1]):
+
+def timeit(fn):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        value = fn(*args, **kwargs)
+        print "Elapsed {0} in function {1}".\
+            format(time.time() - start,  fn.__name__)
+        return value
+    return wrapper
+
+
+def rectangleGenerator(height,
+                       width,
+                       num,
+                       invalid=[-100, -100, 1, 1]):
     print "rectangleGenerator"
     print invalid
     l = []
-    i=0
+    i = 0
     targetRect = Rect(invalid[0], invalid[1], invalid[2], invalid[3])
-    while i<num:
-        x1,y1 = random.uniform(0,height), random.uniform(0,width)
-        h,w = random.uniform(5, height), random.uniform(5,width)
+    while i < num:
+        x1, y1 = random.uniform(0, height), random.uniform(0, width)
+        h, w = random.uniform(5, height), random.uniform(5, width)
         #print h, w
         if h > 5 and w > 5:
-            rectangle = np.array([x1,y1,h,w])
-            test = Rect(x1,y1,h,w)
+            rectangle = np.array([x1, y1, h, w])
+            test = Rect(x1, y1, h, w)
             if not targetRect.colliderect(test):
                 l.append(rectangle)
-                i+=1
+                i += 1
     return l
+
 
 def isRectangleOverlaping(target, rectangle):
     if abs(target[0] - rectangle[0]) < abs(target[2] - rectangle[2]):
