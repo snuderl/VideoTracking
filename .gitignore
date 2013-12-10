@@ -8,6 +8,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Distribution / packaging
+out/
 bin/
 build/
 develop-eggs/

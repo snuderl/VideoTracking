@@ -43,7 +43,7 @@ def drawParticles(pf, center=None):
 
 
 
-initial = particle.ParticleFilter(np.array([70,100,20,20]), 400, (200,200))
+initial = particle.ParticleFilter(np.array([70,100,20,20]), 600, (200,200))
 fig = figure()
 ax=fig.add_subplot(111)
 ax.set_xlim([0, 200]) #pylab.xlim([-400, 400])

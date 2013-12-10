@@ -1,18 +1,18 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4/4
+SIGMA_velocity = 6.4/10
 SIGMA_size = 0.64
 
-###State is represented as a numpy array 
+###State is represented as a numpy array
 ### [x, y, w, h, vx, vy, weight]
 MAX_velocity = 10
 
 class ParticleFilter():
     def __init__(self, target, count, bounds):
         self.count = count
-        self.particles = createInitialParticles(target, count)
-        self.target = target
+        self.target = np.array(target)
+        self.particles = createInitialParticles(self.target, count)
         self.iterations = 0
         self.bounds = bounds
 
@@ -28,11 +28,17 @@ class ParticleFilter():
         #np.clip(self.particles[:,2], 1, self.bounds[0], self.particles[:,2])
         #np.clip(self.particles[:,3], 1, self.bounds[1], self.particles[:,3])
         #Add noise to velocities and clip
-        self.particles[:,4:6] += random.normal(0, SIGMA_velocity, (self.count,2))        
+        self.particles[:,4:6] += random.normal(0, SIGMA_velocity, (self.count,2))
         #np.clip(self.particles[:,4:6], -MAX_velocity,MAX_velocity, self.particles[:,4:6])
 
         lb = [0,0,1,1,-MAX_velocity,-MAX_velocity,0]
-        ub = [self.bounds[0], self.bounds[1], self.bounds[0], self.bounds[1], MAX_velocity, MAX_velocity, 1]
+        ub = [self.bounds[0],
+                self.bounds[1],
+                self.bounds[0],
+                self.bounds[1],
+                MAX_velocity,
+                MAX_velocity,
+                1]
         np.clip(self.particles, lb, ub, self.particles)
         if np.max(self.particles[:,0])>self.bounds[0]:
             print "Not clipped"
@@ -40,15 +46,17 @@ class ParticleFilter():
         ###TODO update weight
 
     def updateWeights(self, scores):
-        lam = 10
+        lam = 20
         ###We have to clip the scores so they dont get to big after exponiating.
         ###They should be between 0 and 1 regardles...
+        #print scores
+        print np.max(scores)
         scores = np.clip(scores,0,1.)
         scores = np.exp(lam*scores)
         total = np.sum(scores)
         self.particles[:,6] = scores/total
-        print total, sum(self.particles[:,6])
-        print scores/total
+        #print total, sum(self.particles[:,6])
+        #print scores/total
         assert np.abs(np.sum(self.particles[:,6]) -1) < 0.1
         self.target = self.getTrackedObject()
         self.resample()
@@ -63,7 +71,7 @@ class ParticleFilter():
         rect = self.particles[:,0:4]
         weights = self.particles[:,6]
         weights = weights[None, :]
-        ##Calculates weight[i]*(x,y,w,h)[i] and sums it 
+        ##Calculates weight[i]*(x,y,w,h)[i] and sums it
         return np.sum(rect * weights.T,axis=0)
 
 
@@ -83,26 +91,9 @@ def createInitialParticles(target, count):
 
 
 
-
-pf = ParticleFilter(np.array([10,10,5,5]), 10, (100,100))
-initial = pf.particles
-print particleToString(initial[0,:])
-print pf.getTrackedObject()
-
-
-
-def particlefilter(initial, targer, stepsize, n):
-  seq = iter(sequence)
-  x = createInitialParticles(target, n)
-  f0 = seq.next()[tuple(pos)] * ones(n)         # Target colour model
-  yield pos, x, ones(n)/n                       # Return expected position, particles and weights
-  for im in seq:
-    x += uniform(-stepsize, stepsize, x.shape)  # Particle motion model: uniform step
-    x  = x.clip(zeros(2), array(im.shape)-1).astype(int) # Clip out-of-bounds particles
-    f  = im[tuple(x.T)]                         # Measure particle colours
-    w  = 1./(1. + (f0-f)**2)                    # Weight~ inverse quadratic colour distance
-    w /= sum(w)                                 # Normalize w
-    yield sum(x.T*w, axis=1), x, w              # Return expected position, particles and weights
-    if 1./sum(w**2) < n/2.:                     # If particle cloud degenerate:
-      x  = x[resample(w),:]    
+if __name__ == "__main__":
+    pf = ParticleFilter(np.array([10,10,5,5]), 10, (100,100))
+    initial = pf.particles
+    print particleToString(initial[0,:])
+    print pf.getTrackedObject()
 
