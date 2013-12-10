@@ -15,12 +15,11 @@ import cv2
 ### Since all haar features will be translated to object space
 ### we define all ther coordinates in range [0-1] to faciliate this.
 
-
 def generateHaarFeatures(number):
     prototype = np.array(
         [0, 0, 1, 1, 0.25, 0.25, 0.5, 0.5])
 
-    scale = random.uniform(0.2, 0.6, (number, 1))
+    scale = random.uniform(0.1, 0.5, (number, 1))
 
     protoypes = np.tile(prototype, (number, 1))*scale
 
@@ -28,8 +27,7 @@ def generateHaarFeatures(number):
     protoypes[:, 0:2] += translation
     protoypes[:, 4:6] += translation
 
-    ### If generated features lies outside
-    ### of range [0,1] translate it back inside
+    ###If generated features lies outside of range [0,1] translate it back inside
     for row in protoypes:
         if row[0]+row[2] > 1:
             move = row[0]+row[2]-1
@@ -49,8 +47,9 @@ def calculateValues(rectangle, haar_features, indices=None):
     '''This functions expects an integral image as input'''
 
     height,width,colors = rectangle.shape
-    x = haar_features[:,::2]*(height-1)
-    y = haar_features[:,1::2]*(width-1)
+    rectangle = cv2.resize(rectangle, (24,24))
+    x = haar_features[:,::2]*24
+    y = haar_features[:,1::2]*24
 
 
 
@@ -130,7 +129,7 @@ def visualizeHaarFeatures():
     outer = cc.to_rgba("#BFCBDE", alpha=0.5)
     inner = cc.to_rgba("RED", alpha=0.5)
 
-    for row in generateHaarFeatures(50):
+    for row in generateHaarFeatures(100):
         patches.append(gca().add_patch(Rectangle((row[0], row[1]),row[2], row[3],color=outer)))
         patches.append(gca().add_patch(Rectangle((row[4], row[5]),row[6], row[7],color=inner)))
     p = collections.PatchCollection(patches)
@@ -144,7 +143,8 @@ def visualizeHaarFeatures():
 
 
 #print generateHaarFeatures(2)
-#visualizeHaarFeatures()
+if __name__ == "__main__":
+    visualizeHaarFeatures()
 
 def testHaarFeatureCalculation():
     test = np.array([[5,2,5,2],[3,6,3,6],[5,2,5,2],[3,6,3,6]])

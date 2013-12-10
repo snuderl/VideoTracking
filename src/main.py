@@ -10,8 +10,8 @@ from utils import measureTime
 filename = "../data/Vid_A_ball.avi"
 target = (200, 110, 50, 55)
 
-filename = "../data/Vid_B_cup.avi"
-target = (0.38960*320, 0.384615*240, 0.146011*320, 0.2440651*240)
+# filename = "../data/Vid_B_cup.avi"
+# target = (0.38960*320, 0.384615*240, 0.146011*320, 0.2440651*240)
 
 # filename = "../data/Vid_D_person.avi"
 # target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
@@ -77,8 +77,7 @@ def calculateFeatureVector(image,
 
     return features
 
-
-def iteration(image, pf, features, pos, neg, newSamples=5):
+def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     positive = pf.target.reshape((1, 4))
     generator = utils.rectangleGenerator(
         image.shape[1],
@@ -90,31 +89,26 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
     feature_vector = calculateFeatureVector(image, examples, features, pf.target, out=False)
     if not neg == None:
-        #print neg.shape, feature_vector.shape
-        #print neg.shape, pos.shape
         neg = np.vstack((neg, feature_vector[:-1,:]))
         pos = np.vstack((pos, feature_vector[-1,:].reshape(1,450)))
-        #print neg.shape, pos.shape
 
     else:
         neg = feature_vector[:-1,:]
         pos = feature_vector[-1,:].reshape(1,450)
 
+    return pos, neg
 
 
+def iteration(image, pf, features, pos, neg, newSamples=5):
     train = np.vstack((pos, neg))
     targets = np.zeros((pos.shape[0]+neg.shape[0]))
-    #print pos.shape[0]
     targets[:pos.shape[0]]=1
 
-
-    #print targets.shape, train.shape
-    #print pos.shape, neg.shape
-    #print positives
+    adaBoost = learner.initialize(32)
     with measureTime("Ada boost learning"):
-        adaBoost = learner.initialize(32)
         adaBoost.fit(train, targets)
         indices = adaBoost.feature_importances_.argsort()[-32:][::-1]
+        #print targets
 
     #print feature_vector
     #probabilities = adaBoost.predict_proba(feature_vector)[:,1]
@@ -123,13 +117,17 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(image, pf.particles, features, pf.target, indices=indices)
-    scores = adaBoost.predict_proba(particle_features)
+    scores = adaBoost.predict_proba(particle_features)[:,1]
+    print adaBoost.predict_proba(particle_features), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
 
     #drawParticle(image, pf.particles[scores.argmax()])
 
     #print np.max(scores)
     #print particles[:,6]
+    with measureTime("Generating new samples:"):
+        pos, neg = generateNewSamples(image, pf, features, pos, neg, newSamples)
+
     return pos, neg
 
 
@@ -148,8 +146,7 @@ if __name__ == "__main__":
     if(capture.isOpened):
         retval, image = capture.read()
         target, pf, features = start(image)
-        with measureTime("Iteration {}".format(iterationCount)):
-            pos, neg = iteration(image, pf, features, pos, neg, newSamples=100)
+        pos, neg = generateNewSamples(image, pf, features, pos, neg, 100)
         target = pf.target
     while retval:
 
