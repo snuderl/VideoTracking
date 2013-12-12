@@ -14,6 +14,7 @@ class Trainer:
         self.trainer = AdaBoostClassifier(
             n_estimators=self.n)
         self.trainer.fit(train, test, sample_weight=weights)
+        #print self.trainer.feature_importances_
 
     def score(self, data):
         scores = self.trainer.predict_proba(data)

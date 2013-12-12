@@ -54,12 +54,10 @@ def calculateFeatureVector(image,
                            out=False,
                            indices=None):
 
-    # print integral
     features = np.zeros((particles.shape[0],
                         haar_features.shape[0] * image.shape[2]))
     cv2.imwrite("out/target{}.jpg".format(iterationCount),
                 cropImage(image, target))
-    #print "integral", cv2.integral(image).shape
     for i, particle in enumerate(particles):
         particle_image = cropImage(image, particle)
         calculated = haar.calculateValues(
@@ -79,7 +77,6 @@ def calculateFeatureVector(image,
 
 
 def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
-    image = image.astype(np.uint8)
     positive = pf.target.reshape((1, 4))
     generator = utils.rectangleGenerator(
         image.shape[1],
@@ -101,11 +98,11 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
         positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
         pos = positive
 
-    print pos.shape
     return pos, neg
 
 
 def iteration(image, pf, features, pos, neg, newSamples=5):
+    image = image.astype(np.float32)
     train = np.vstack((pos, neg))
     targets = np.zeros((pos.shape[0] + neg.shape[0]))
     targets[:pos.shape[0]] = 1
@@ -124,14 +121,14 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(
-            image, pf.particles, features, pf.target, indices=indices)
+            image, pf.particles, features, pf.target, indices=None)
     scores = adaBoost.score(particle_features)[:, 1]
     #print adaBoost.score(train)
     print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
     #drawParticle(image, pf.particles[scores.argmax()])
     targetVector = calculateFeatureVector(
-        image, np.array([pf.target]), features, pf.target, indices=indices)
+        image, np.array([pf.target]), features, pf.target, indices=None)
     targetScore = adaBoost.score(targetVector)
     targetClass = adaBoost.predict(targetVector)
     print "Target probability: {}, Class:{}".format(targetScore, targetClass)

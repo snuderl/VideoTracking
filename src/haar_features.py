@@ -5,6 +5,8 @@ import matplotlib.collections as collections
 from matplotlib.colors import ColorConverter
 import cv2
 
+from skimage.transform import integral_image
+
 # We represent a center surrond haar feature
 # as an array of 4 points and a color selector
 # [x1,y1,x2,y2,x3,y3,x4,y4]
@@ -20,7 +22,7 @@ def generateHaarFeatures(number):
     prototype = np.array(
         [0, 0, 1, 1, 0.25, 0.25, 0.5, 0.5])
 
-    scale = random.uniform(0.3, 0.8, (number, 1))
+    scale = random.uniform(0.15, 0.6, (number, 1))
 
     protoypes = np.tile(prototype, (number, 1)) * scale
 
@@ -50,7 +52,9 @@ def generateHaarFeatures(number):
 def calculateValues(rectangle, haar_features, indices=None):
     '''This functions expects an integral image as input'''
 
-    rectangle = cv2.integral(rectangle).astype(np.float32)
+    rectangle = integral_image(rectangle).astype(np.float32)
+    #print rectangle.dtype
+    #print rectangle.dtype
     #print rectangle.shape
     height, width, colors = rectangle.shape
     x = haar_features[:, ::2] * rectangle.shape[0]
@@ -73,7 +77,7 @@ def calculateValues(rectangle, haar_features, indices=None):
             D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
             A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
             B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, x1))
+            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
             areaOuter = D + A - B - C
             # print x1,y1,x2,y2
             # print D,A,B,C
@@ -84,7 +88,7 @@ def calculateValues(rectangle, haar_features, indices=None):
             D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
             A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
             B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, x1))
+            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
             areaInner = D + A - B - C
 
             c = i % 3
@@ -99,7 +103,7 @@ def calculateValues(rectangle, haar_features, indices=None):
             D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
             A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
             B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, x1))
+            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
             areaOuter = D + A - B - C
             # print x1,y1,x2,y2
             # print D,A,B,C
@@ -110,7 +114,7 @@ def calculateValues(rectangle, haar_features, indices=None):
             D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
             A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
             B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, x1))
+            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
             areaInner = D + A - B - C
             values[i:i+3] = (areaOuter - 2 * areaInner).ravel()
             # print x1,y1,x2,y2
