@@ -1,6 +1,5 @@
 import numpy as np
-from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor, GradientBoostingClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
 
 
 class Trainer:
@@ -11,12 +10,10 @@ class Trainer:
     def features(self):
         return self.trainer.feature_importances_.argsort()[-self.n:][::-1]
 
-    def train(self, train, test):
+    def train(self, train, test, weights):
         self.trainer = AdaBoostClassifier(
-            n_estimators=self.n,
-            learning_rate=1.0,
-            algorithm='SAMME.R')
-        self.trainer.fit(train, test)
+            n_estimators=self.n)
+        self.trainer.fit(train, test, sample_weight=weights)
 
     def score(self, data):
         scores = self.trainer.predict_proba(data)

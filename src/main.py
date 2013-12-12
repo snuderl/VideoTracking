@@ -43,7 +43,7 @@ def drawParticle(image, target):
 def cropImage(image, rectangle):
     x, y = rectangle[0], rectangle[1]
     h, w = rectangle[2], rectangle[3]
-    return cv2.getRectSubPix(image.astype(np.uint8),
+    return cv2.getRectSubPix(image,
                              (int(h), int(w)), (x + h / 2, y + w / 2))
 
 
@@ -79,6 +79,7 @@ def calculateFeatureVector(image,
 
 
 def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
+    image = image.astype(np.uint8)
     positive = pf.target.reshape((1, 4))
     generator = utils.rectangleGenerator(
         image.shape[1],
@@ -98,7 +99,7 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     else:
         neg = feature_vector[:-1, :]
         positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
-        pos = np.vstack((positive, positive))
+        pos = positive
 
     print pos.shape
     return pos, neg
@@ -111,13 +112,13 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
     adaBoost = learner.Trainer(32)
 
-    with measureTime("Ada boost learning"):
-        adaBoost.train(train, targets)
-        indices = adaBoost.features()
-        # print targets
+    weights = np.ones(targets.shape)
+    weights[0] = 4
+    weights = weights / weights.sum()
 
-    # print feature_vector
-    #probabilities = adaBoost.predict_proba(feature_vector)[:,1]
+    with measureTime("Ada boost learning"):
+        adaBoost.train(train, targets, weights)
+        indices = adaBoost.features()
 
     with measureTime("Updating particles"):
         pf.updateParticles()
