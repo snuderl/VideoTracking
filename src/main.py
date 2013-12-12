@@ -61,7 +61,7 @@ def calculateFeatureVector(image,
     for i, particle in enumerate(particles):
         particle_image = cropImage(image, particle)
         calculated = haar.calculateValues(
-            particle_image, haar_features, indices=indices).ravel()
+            particle_image, haar_features, indices).ravel()
         # print calculated.shape
         # print calculated.shape
         features[i, :] = calculated
@@ -143,7 +143,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
 def start(image):
     # Initialize particles
-    pf = particle.ParticleFilter(target, 1000, image.shape[:2])
+    pf = particle.ParticleFilter(target, 600, image.shape[:2])
     # Generate haar features
     features = haar.generateHaarFeatures(200)
 

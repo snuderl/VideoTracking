@@ -47,9 +47,10 @@ def generateHaarFeatures(number):
 # TODO: This function should be implemented using cv.remap,
 # which would enable us to inteprolate without looping,
 # or pershaps using numpys meshgrid
+from numba import autojit
 
-
-def calculateValues(rectangle, haar_features, indices=None):
+@autojit
+def calculateValues(rectangle, haar_features, indices):
     '''This functions expects an integral image as input'''
 
     rectangle = integral_image(rectangle).astype(np.float32)
