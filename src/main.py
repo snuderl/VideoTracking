@@ -103,7 +103,7 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
 
     return pos, neg
 
-adaBoost = learner.Trainer(32)
+adaBoost = learner.Trainer(5)
 
 
 def iteration(image, pf, features, pos, neg, newSamples=5):
@@ -124,7 +124,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
         particle_features = calculateFeatureVector(
-            image, pf.particles, features, pf.target, indices=None)
+            image, pf.particles, features, pf.target, indices=indices)
     scores = adaBoost.score(particle_features)[:, 1]
     # print adaBoost.score(train)
     print scores.max(), adaBoost.predict(particle_features).sum()
@@ -152,7 +152,7 @@ def start(image):
     # Initialize particles
     pf = particle.ParticleFilter(target, 1500, image.shape[:2])
     # Generate haar features
-    features = haar.generateHaarFeatures(150)
+    features = haar.generateHaarFeatures(100)
 
     return target, pf, features
 

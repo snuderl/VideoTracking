@@ -50,13 +50,15 @@ def generateHaarFeatures(number):
 #from numba import autojit
 
 #@autojit
+
+
 def calculateValues(rectangle, haar_features, indices):
     '''This functions expects an integral image as input'''
 
     rectangle = integral_image(rectangle).astype(np.float32)
-    #print rectangle.dtype
-    #print rectangle.dtype
-    #print rectangle.shape
+    # print rectangle.dtype
+    # print rectangle.dtype
+    # print rectangle.shape
     height, width, colors = rectangle.shape
     x = haar_features[:, ::2] * rectangle.shape[0]
     y = haar_features[:, 1::2] * rectangle.shape[1]
@@ -64,61 +66,60 @@ def calculateValues(rectangle, haar_features, indices):
     # rectangle = cv2.resize(rectangle, (50,50))
     # x = haar_features[:,::2]*25
     # y = haar_features[:,1::2]*25
-    coords1x = x[:, 0] + x[:, 1]/2
-    coords1y = y[:, 0] + y[:, 1]/2
-    coords2x = x[:, 2] + x[:, 3]/2
-    coords2y = y[:, 2] + y[:, 3]/2
-
+    coords1x = x[:, 0] + x[:, 1] / 2
+    coords1y = y[:, 0] + y[:, 1] / 2
+    coords2x = x[:, 2] + x[:, 3] / 2
+    coords2y = y[:, 2] + y[:, 3] / 2
 
     values = np.zeros((haar_features.shape[0] * colors))
     if not indices == None:
         for i in indices:
-            x1, y1 = x[i / 3, 0], y[i / 3, 0]
-            x2, y2 = coords1x[i / 3], coords1y[i / 3]
+            x1, y1 = round(x[i / 3, 0]), round(y[i / 3, 0])
+            x2, y2 = round(coords1x[i / 3]), round(coords1y[i / 3])
 
-            D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
-            A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
-            B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
+            D = rectangle[x2, y2]
+            A = rectangle[x1, y1]
+            B = rectangle[x2, y1]
+            C = rectangle[x1, y2]
             areaOuter = D + A - B - C
             # print x1,y1,x2,y2
             # print D,A,B,C
             # print areaOuter
 
-            x1, y1 = x[i / 3, 2], y[i / 3, 2]
-            x2, y2 = coords2x[i / 3], coords2y[i / 3]
-            D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
-            A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
-            B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
+            x1, y1 = round(x[i / 3, 2]), round(y[i / 3, 2])
+            x2, y2 = round(coords2x[i / 3]), round(coords2y[i / 3])
+            D = rectangle[x2, y2]
+            A = rectangle[x1, y1]
+            B = rectangle[x2, y1]
+            C = rectangle[x1, y2]
             areaInner = D + A - B - C
 
             c = i % 3
             area = areaOuter - 2 * areaInner
             # print c,i,values.shape, area
-            values[i] = area[0][0][c]
+            values[i] = area[c]
 
     else:
         for i in range(haar_features.shape[0]):
-            x1, y1 = x[i, 0], y[i, 0]
-            x2, y2 = coords1x[i], coords1y[i]
-            D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
-            A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
-            B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
+            x1, y1 = round(x[i, 0]), round(y[i, 0])
+            x2, y2 = round(coords1x[i]), round(coords1y[i])
+            D = rectangle[x2, y2]
+            A = rectangle[x1, y1]
+            B = rectangle[x2, y1]
+            C = rectangle[x1, y2]
             areaOuter = D + A - B - C
             # print x1,y1,x2,y2
             # print D,A,B,C
             # print areaOuter
 
-            x1, y1 = x[i, 2], y[i, 2]
-            x2, y2 = coords2x[i], coords2y[i]
-            D = cv2.getRectSubPix(rectangle, (1, 1), (x2, y2))
-            A = cv2.getRectSubPix(rectangle, (1, 1), (x1, y1))
-            B = cv2.getRectSubPix(rectangle, (1, 1), (x1, y2))
-            C = cv2.getRectSubPix(rectangle, (1, 1), (x2, y1))
+            x1, y1 = round(x[i, 2]), round(y[i, 2])
+            x2, y2 = round(coords2x[i]), round(coords2y[i])
+            D = rectangle[x2, y2]
+            A = rectangle[x1, y1]
+            B = rectangle[x2, y1]
+            C = rectangle[x1, y2]
             areaInner = D + A - B - C
-            values[i:i+3] = (areaOuter - 2 * areaInner).ravel()
+            values[i*3:i*3 + 3] = (areaOuter - 2 * areaInner).ravel()
             # print x1,y1,x2,y2
             # print D,A,B,C
             # print areaInner
