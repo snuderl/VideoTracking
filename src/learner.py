@@ -6,13 +6,18 @@ class Trainer:
 
     def __init__(self, n=32):
         self.n = n
-
-    def features(self):
-        return self.trainer.feature_importances_.argsort()[-self.n:][::-1]
-
-    def train(self, train, test, weights):
+        self.last = None        
         self.trainer = AdaBoostClassifier(
             n_estimators=self.n)
+    def features(self):
+        f = np.array(self.trainer.feature_importances_.argsort()[-self.n:][::-1])
+        f.sort()
+        if not self.last == None:
+            print len(set(f.flatten()).intersection(self.last.flatten()))
+        self.last = f
+        return f 
+
+    def train(self, train, test, weights):
         self.trainer.fit(train, test, sample_weight=weights)
 
     def score(self, data):

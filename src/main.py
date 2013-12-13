@@ -1,4 +1,5 @@
 import cv2
+import cv
 import particle
 import haar_features as haar
 import numpy as np
@@ -7,16 +8,19 @@ import utils
 import os
 from utils import measureTime
 
-filename = "../data/Vid_A_ball.avi"
+directory = "../data/"
+ext = ".avi"
+filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
 
-# filename = "../data/Vid_B_cup.avi"
-# target = (0.38960*320, 0.384615*240, 0.146011*320, 0.2440651*240)
+filename = "Vid_B_cup"
+target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-# filename = "../data/Vid_D_person.avi"
-# target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
+#filename = "../data/Vid_D_person.avi"
+#target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
-capture = cv2.VideoCapture(filename)
+capture = cv2.VideoCapture(directory + filename + ext)
+
 
 cv2.namedWindow("video")
 cv2.namedWindow("particle")
@@ -56,8 +60,7 @@ def calculateFeatureVector(image,
 
     features = np.zeros((particles.shape[0],
                         haar_features.shape[0] * image.shape[2]))
-    cv2.imwrite("out/target{}.jpg".format(iterationCount),
-                cropImage(image, target))
+
     for i, particle in enumerate(particles):
         particle_image = cropImage(image, particle)
         calculated = haar.calculateValues(
@@ -66,7 +69,7 @@ def calculateFeatureVector(image,
         # print calculated.shape
         features[i, :] = calculated
         if out:
-            directory = "out/iteration{}".format(iterationCount)
+            directory = "out/{}/iteration{}".format(filename, iterationCount)
             if not os.path.exists(directory):
                 os.makedirs(directory)
             particle_image_orig = cropImage(image, particle)
@@ -100,14 +103,14 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
 
     return pos, neg
 
+adaBoost = learner.Trainer(32)
+
 
 def iteration(image, pf, features, pos, neg, newSamples=5):
     image = image.astype(np.float32)
     train = np.vstack((pos, neg))
     targets = np.zeros((pos.shape[0] + neg.shape[0]))
     targets[:pos.shape[0]] = 1
-
-    adaBoost = learner.Trainer(32)
 
     weights = np.ones(targets.shape)
     weights[0] = 4
@@ -123,7 +126,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         particle_features = calculateFeatureVector(
             image, pf.particles, features, pf.target, indices=None)
     scores = adaBoost.score(particle_features)[:, 1]
-    #print adaBoost.score(train)
+    # print adaBoost.score(train)
     print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
     #drawParticle(image, pf.particles[scores.argmax()])
@@ -142,10 +145,14 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
 
 
 def start(image):
+    directory = "out/{}".format(filename, iterationCount)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     # Initialize particles
-    pf = particle.ParticleFilter(target, 600, image.shape[:2])
+    pf = particle.ParticleFilter(target, 1500, image.shape[:2])
     # Generate haar features
-    features = haar.generateHaarFeatures(200)
+    features = haar.generateHaarFeatures(150)
 
     return target, pf, features
 
@@ -155,6 +162,7 @@ if __name__ == "__main__":
     pos, neg = None, None
     print pos
     if(capture.isOpened):
+        open("out/{}/output.txt".format(filename), "w")
         retval, image = capture.read()
         target, pf, features = start(image)
         pos, neg = generateNewSamples(image, pf, features, pos, neg, 100)
@@ -175,6 +183,7 @@ if __name__ == "__main__":
         text = "Iteration {}".format(iterationCount)
         cv2.putText(image, text, (
             20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+
         # for p in pf.particles:
         #     drawParticle(image, p)
         #     displayParticles = True
@@ -187,8 +196,34 @@ if __name__ == "__main__":
         #     if not displayParticles:
         #         break
         target = pf.target
+
+
+        directory =  "out/{}".format(filename)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        cv2.imwrite(
+            "out/{}/target{}.jpg".format(filename, iterationCount),
+            cropImage(image, target))
+
         drawTarget(image, target)
         drawParticle(image, target)
+
+        cv2.imwrite(
+            "out/{}/image{}.jpg".format(filename, iterationCount),
+            image)
+
+        with open("out/{}/output.txt".format(filename), "a") as f:
+            f.write("{},{},{},{}\n".format(
+                target[0],
+                target[1],
+                target[2],
+                target[3]))
+
+
+
+
+
+
 
         # for x in pf.particles:
             #drawTarget(image, x)
