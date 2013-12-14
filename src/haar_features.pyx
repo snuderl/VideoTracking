@@ -4,6 +4,7 @@ from matplotlib.pyplot import *
 import matplotlib.collections as collections
 from matplotlib.colors import ColorConverter
 import cv2
+import utils
 
 from skimage.transform import integral_image
 
@@ -46,6 +47,36 @@ def generateHaarFeatures(number):
 
     return protoypes
 
+@cython.boundscheck(False)
+def calculateFeatureVector(np.ndarray image,
+                           np.ndarray particles,
+                           np.ndarray haar_features,
+                           target,
+                           out=False,
+                           indices=None):
+
+    features = np.zeros((particles.shape[0],
+                        haar_features.shape[0] * image.shape[2]))
+
+    for i in range(particles.shape[0]):
+        particle = particles[i,:]
+        particle_image = utils.cropImage(image, particle)
+        particle_image = integral_image(particle_image).astype(np.float32)
+        calculated = calculateValues(
+            particle_image, haar_features, indices).ravel()
+        # print calculated.shape
+        # print calculated.shape
+        features[i, :] = calculated
+        if out:
+            directory = "out/{}/iteration{}".format(filename, iterationCount)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            particle_image_orig = cropImage(image, particle)
+            name = "/rect{}.jpg".format(i)
+            cv2.imwrite(directory + name, particle_image_orig)
+
+    return features
+
 # TODO: This function should be implemented using cv.remap,
 # which would enable us to inteprolate without looping,
 # or pershaps using numpys meshgrid
@@ -54,7 +85,7 @@ cpdef np.ndarray[np.float32_t, ndim=1] calculateValues(np.ndarray image,np.ndarr
     '''This functions expects an integral image as input'''
     cdef int x1, y1, x2 ,y2
     cdef np.ndarray[np.float32_t, ndim=1] D,A,B,C
-    cdef np.ndarray[np.float32_t, ndim=3] rectangle = integral_image(image).astype(np.float32)
+    cdef np.ndarray[np.float32_t, ndim=3] rectangle = image
     # print rectangle.dtype
     # print rectangle.dtype
     # print rectangle.shape

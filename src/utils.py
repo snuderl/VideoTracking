@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as random
 from pygame import Rect
 import time
+import cv2
 from contextlib import contextmanager
 
 
@@ -12,6 +13,11 @@ def measureTime(title):
     t2 = time.clock()
     print '%s: %0.2f seconds elapsed' % (title, t2-t1)
 
+def cropImage(image, rectangle):
+    x, y = rectangle[0], rectangle[1]
+    h, w = rectangle[2], rectangle[3]
+    return cv2.getRectSubPix(image,
+                             (int(h), int(w)), (x + h / 2, y + w / 2))
 
 def timeit(fn):
     def wrapper(*args, **kwargs):

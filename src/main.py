@@ -7,6 +7,7 @@ import learner
 import utils
 import os
 from utils import measureTime
+from skimage.transform import integral_image
 
 directory = "../data/"
 ext = ".avi"
@@ -40,43 +41,14 @@ def drawTarget(image, target):
 
 def drawParticle(image, target):
     image = image.copy()
-    image = cropImage(image, target)
+    image = utils.cropImage(image, target)
     cv2.imshow("particle", image)
 
 
-def cropImage(image, rectangle):
-    x, y = rectangle[0], rectangle[1]
-    h, w = rectangle[2], rectangle[3]
-    return cv2.getRectSubPix(image,
-                             (int(h), int(w)), (x + h / 2, y + w / 2))
 
 
-def calculateFeatureVector(image,
-                           particles,
-                           haar_features,
-                           target,
-                           out=False,
-                           indices=None):
 
-    features = np.zeros((particles.shape[0],
-                        haar_features.shape[0] * image.shape[2]))
 
-    for i, particle in enumerate(particles):
-        particle_image = cropImage(image, particle)
-        calculated = haar.calculateValues(
-            particle_image, haar_features, indices).ravel()
-        # print calculated.shape
-        # print calculated.shape
-        features[i, :] = calculated
-        if out:
-            directory = "out/{}/iteration{}".format(filename, iterationCount)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            particle_image_orig = cropImage(image, particle)
-            name = "/rect{}.jpg".format(i)
-            cv2.imwrite(directory + name, particle_image_orig)
-
-    return features
 
 
 def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
@@ -89,7 +61,7 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     negative = np.array(list(generator))
     examples = np.vstack((negative, positive))
 
-    feature_vector = calculateFeatureVector(
+    feature_vector = haar.calculateFeatureVector(
         image, examples, features, pf.target, out=False)
     if not neg == None:
         neg = np.vstack((neg, feature_vector[:-1, :]))
@@ -123,14 +95,14 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
     with measureTime("Updating particles"):
         pf.updateParticles()
     with measureTime("Calculating particle features"):
-        particle_features = calculateFeatureVector(
+        particle_features = haar.calculateFeatureVector(
             image, pf.particles, features, pf.target, indices=indices)
     scores = adaBoost.score(particle_features)[:, 1]
     # print adaBoost.score(train)
     print scores.max(), adaBoost.predict(particle_features).sum()
     pf.updateWeights(scores)
     #drawParticle(image, pf.particles[scores.argmax()])
-    targetVector = calculateFeatureVector(
+    targetVector = haar.calculateFeatureVector(
         image, np.array([pf.target]), features, pf.target, indices=None)
     targetScore = adaBoost.score(targetVector)
     targetClass = adaBoost.predict(targetVector)
@@ -170,6 +142,9 @@ if __name__ == "__main__":
         target = pf.target
     while retval:
 
+        if iterationCount == 150:
+            break
+
         cv2.imshow("video", image)
         key = cv2.waitKey(500) & 0xFF
         if key == ord('q'):
@@ -203,7 +178,7 @@ if __name__ == "__main__":
             os.makedirs(directory)
         cv2.imwrite(
             "out/{}/target{}.jpg".format(filename, iterationCount),
-            cropImage(image, target))
+            utils.cropImage(image, target))
 
         drawTarget(image, target)
         drawParticle(image, target)

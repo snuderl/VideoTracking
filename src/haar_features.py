@@ -4,6 +4,7 @@ from matplotlib.pyplot import *
 import matplotlib.collections as collections
 from matplotlib.colors import ColorConverter
 import cv2
+import utils
 
 from skimage.transform import integral_image
 
@@ -16,6 +17,8 @@ from skimage.transform import integral_image
 #
 # Since all haar features will be translated to object space
 # we define all ther coordinates in range [0-1] to faciliate this.
+
+
 
 
 def generateHaarFeatures(number):
@@ -51,6 +54,33 @@ def generateHaarFeatures(number):
 
 #@autojit
 
+def calculateFeatureVector(image,
+                           particles,
+                           haar_features,
+                           target,
+                           out=False,
+                           indices=None):
+
+    features = np.zeros((particles.shape[0],
+                        haar_features.shape[0] * image.shape[2]))
+
+    image = integral_image(image).astype(np.float32)
+    for i, particle in enumerate(particles):
+        particle_image = utils.cropImage(image, particle)
+        calculated = haar.calculateValues(
+            particle_image, haar_features, indices).ravel()
+        # print calculated.shape
+        # print calculated.shape
+        features[i, :] = calculated
+        if out:
+            directory = "out/{}/iteration{}".format(filename, iterationCount)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            particle_image_orig = cropImage(image, particle)
+            name = "/rect{}.jpg".format(i)
+            cv2.imwrite(directory + name, particle_image_orig)
+
+    return features
 
 def calculateValues(rectangle, haar_features, indices):
     '''This functions expects an integral image as input'''
