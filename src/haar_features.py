@@ -42,6 +42,14 @@ def generateHaarFeatures(number):
             row[1] -= move
             row[5] -= move
 
+    protoypes[2:4,:] = protoypes[2:4,:] + protoypes[0:2,:]
+    protoypes[6:8,:] = protoypes[6:8,:] + protoypes[4:6,:]
+
+    for row in protoypes:
+        for i in range(row.shape[0]):
+            if(row[i] > 1):
+                row[i] = 1
+
     return protoypes
 
 # TODO: This function should be implemented using cv.remap,
@@ -55,27 +63,29 @@ def generateHaarFeatures(number):
 def calculateValues(rectangle, haar_features, indices):
     '''This functions expects an integral image as input'''
 
-    rectangle = integral_image(rectangle).astype(np.float32)
+    rectangle = cv2.integral(rectangle).astype(np.float32)
     # print rectangle.dtype
     # print rectangle.dtype
     # print rectangle.shape
     height, width, colors = rectangle.shape
-    x = haar_features[:, ::2] * rectangle.shape[0]
-    y = haar_features[:, 1::2] * rectangle.shape[1]
+    height -= 1
+    width -= 1
+    x = np.round(haar_features[:, ::2] * height)
+    y = np.round(haar_features[:, 1::2] * width)
 
     # rectangle = cv2.resize(rectangle, (50,50))
     # x = haar_features[:,::2]*25
     # y = haar_features[:,1::2]*25
-    coords1x = x[:, 0] + x[:, 1] / 2
-    coords1y = y[:, 0] + y[:, 1] / 2
-    coords2x = x[:, 2] + x[:, 3] / 2
-    coords2y = y[:, 2] + y[:, 3] / 2
+    coords1x = x[:, 1]
+    coords1y = y[:, 1]
+    coords2x = x[:, 3]
+    coords2y = y[:, 3]
 
     values = np.zeros((haar_features.shape[0] * colors))
     if not indices == None:
         for i in indices:
-            x1, y1 = round(x[i / 3, 0]), round(y[i / 3, 0])
-            x2, y2 = round(coords1x[i / 3]), round(coords1y[i / 3])
+            x1, y1 = x[i / 3, 0], y[i / 3, 0]
+            x2, y2 = coords1x[i / 3], coords1y[i / 3]
 
             D = rectangle[x2, y2]
             A = rectangle[x1, y1]
@@ -86,8 +96,8 @@ def calculateValues(rectangle, haar_features, indices):
             # print D,A,B,C
             # print areaOuter
 
-            x1, y1 = round(x[i / 3, 2]), round(y[i / 3, 2])
-            x2, y2 = round(coords2x[i / 3]), round(coords2y[i / 3])
+            x1, y1 = x[i / 3, 2], y[i / 3, 2]
+            x2, y2 = coords2x[i / 3], coords2y[i / 3]
             D = rectangle[x2, y2]
             A = rectangle[x1, y1]
             B = rectangle[x2, y1]
@@ -101,8 +111,8 @@ def calculateValues(rectangle, haar_features, indices):
 
     else:
         for i in range(haar_features.shape[0]):
-            x1, y1 = round(x[i, 0]), round(y[i, 0])
-            x2, y2 = round(coords1x[i]), round(coords1y[i])
+            x1, y1 = x[i, 0], y[i, 0]
+            x2, y2 = coords1x[i], coords1y[i]
             D = rectangle[x2, y2]
             A = rectangle[x1, y1]
             B = rectangle[x2, y1]
@@ -112,8 +122,8 @@ def calculateValues(rectangle, haar_features, indices):
             # print D,A,B,C
             # print areaOuter
 
-            x1, y1 = round(x[i, 2]), round(y[i, 2])
-            x2, y2 = round(coords2x[i]), round(coords2y[i])
+            x1, y1 = x[i, 2], y[i, 2]
+            x2, y2 = coords2x[i], coords2y[i]
             D = rectangle[x2, y2]
             A = rectangle[x1, y1]
             B = rectangle[x2, y1]
@@ -139,10 +149,11 @@ def visualizeHaarFeatures():
     inner = cc.to_rgba("RED", alpha=0.5)
 
     for row in generateHaarFeatures(100):
+        #print row
         patches.append(
-            gca().add_patch(Rectangle((row[0], row[1]), row[2], row[3], color=outer)))
+            gca().add_patch(Rectangle((row[0], row[1]), row[2]-row[0], row[3]-row[1], color=outer)))
         patches.append(
-            gca().add_patch(Rectangle((row[4], row[5]), row[6], row[7], color=inner)))
+            gca().add_patch(Rectangle((row[4], row[5]), row[6]-row[4], row[7]-row[5], color=inner)))
     p = collections.PatchCollection(patches)
 
     patches = ax.add_collection(p)
