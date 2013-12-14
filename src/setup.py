@@ -9,5 +9,6 @@ setup(
     name = 'test',
     cmdclass = {'build_ext': build_ext},
     include_dirs = [numpy.get_include()], # << New line
+    extra_compile_args=["-O3"],
     ext_modules = ext_modules
 )

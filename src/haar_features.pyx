@@ -45,13 +45,14 @@ def generateHaarFeatures(number):
             row[1] -= move
             row[5] -= move
 
+
     return protoypes
 
 @cython.boundscheck(False)
 def calculateFeatureVector(np.ndarray image,
                            np.ndarray particles,
                            np.ndarray haar_features,
-                           target,
+                           np.ndarray target,
                            out=False,
                            indices=None):
 
@@ -60,22 +61,17 @@ def calculateFeatureVector(np.ndarray image,
 
     for i in range(particles.shape[0]):
         particle = particles[i,:]
-        particle_image = utils.cropImage(image, particle)
+        particle_image = cropImage(image, particle[0], particle[1], particle[2], particle[3])
         particle_image = integral_image(particle_image).astype(np.float32)
         calculated = calculateValues(
             particle_image, haar_features, indices).ravel()
-        # print calculated.shape
-        # print calculated.shape
         features[i, :] = calculated
-        if out:
-            directory = "out/{}/iteration{}".format(filename, iterationCount)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            particle_image_orig = cropImage(image, particle)
-            name = "/rect{}.jpg".format(i)
-            cv2.imwrite(directory + name, particle_image_orig)
 
     return features
+
+cdef cropImage(np.ndarray image, float x,float y,float h,float w):
+    return cv2.getRectSubPix(image,
+                             (int(h), int(w)), (x + h / 2, y + w / 2))
 
 # TODO: This function should be implemented using cv.remap,
 # which would enable us to inteprolate without looping,
@@ -86,11 +82,9 @@ cpdef np.ndarray[np.float32_t, ndim=1] calculateValues(np.ndarray image,np.ndarr
     cdef int x1, y1, x2 ,y2
     cdef np.ndarray[np.float32_t, ndim=1] D,A,B,C
     cdef np.ndarray[np.float32_t, ndim=3] rectangle = image
-    # print rectangle.dtype
-    # print rectangle.dtype
-    # print rectangle.shape
-    cdef int height = rectangle.shape[0]
-    cdef int width = rectangle.shape[1]
+
+    cdef int height = rectangle.shape[0]-1
+    cdef int width = rectangle.shape[1]-1
     cdef int colors = rectangle.shape[2]
     cdef np.ndarray x = haar_features[:, ::2] * height
     cdef np.ndarray y = haar_features[:, 1::2] * width
@@ -100,10 +94,10 @@ cpdef np.ndarray[np.float32_t, ndim=1] calculateValues(np.ndarray image,np.ndarr
     # rectangle = cv2.resize(rectangle, (50,50))
     # x = haar_features[:,::2]*25
     # y = haar_features[:,1::2]*25
-    cdef np.ndarray coords1x = x[:, 0] + x[:, 1] / 2
-    cdef np.ndarray coords1y = y[:, 0] + y[:, 1] / 2
-    cdef np.ndarray coords2x = x[:, 2] + x[:, 3] / 2
-    cdef np.ndarray coords2y = y[:, 2] + y[:, 3] / 2
+    cdef np.ndarray coords1x = x[:, 0] + x[:, 1]
+    cdef np.ndarray coords1y = y[:, 0] + y[:, 1]
+    cdef np.ndarray coords2x = x[:, 2] + x[:, 3]
+    cdef np.ndarray coords2y = y[:, 2] + y[:, 3]
 
     cdef np.ndarray[np.float32_t, ndim=1] values = np.zeros((haar_features.shape[0] * colors),
     dtype=np.float32).reshape(haar_features.shape[0] * colors)

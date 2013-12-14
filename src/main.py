@@ -14,8 +14,8 @@ ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
 
-filename = "Vid_B_cup"
-target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
+#filename = "Vid_B_cup"
+#target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
 #filename = "../data/Vid_D_person.avi"
 #target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
@@ -64,9 +64,16 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=5):
     feature_vector = haar.calculateFeatureVector(
         image, examples, features, pf.target, out=False)
     if not neg == None:
-        neg = np.vstack((neg, feature_vector[:-1, :]))
+        if neg.shape[0] < 120:
+            neg = np.vstack((neg, feature_vector[:-1, :]))
+        else:
+            neg[np.random.randint(0,neg.shape[0], (newSamples))] = feature_vector[:-1, :]
         positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
-        pos = np.vstack((pos, positive))
+
+        if pos.shape[0] >= 10:
+            pos[np.random.randint(1,10), :] = positive
+        else:
+            pos = np.vstack((pos, positive))
 
     else:
         neg = feature_vector[:-1, :]
@@ -122,9 +129,9 @@ def start(image):
         os.makedirs(directory)
 
     # Initialize particles
-    pf = particle.ParticleFilter(target, 1500, image.shape[:2])
+    pf = particle.ParticleFilter(target, 1000, image.shape[:2])
     # Generate haar features
-    features = haar.generateHaarFeatures(100)
+    features = haar.generateHaarFeatures(150)
 
     return target, pf, features
 
