@@ -27,6 +27,9 @@ target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 filename = "Vid_D_person"
 target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
+filename = "Vid_C_juice"
+target = (0 * 320, 0.410029 * 240, 0.208388 * 320, 0.114061 * 240)
+
 if camera:
     capture = cv2.VideoCapture(0)
 else:
