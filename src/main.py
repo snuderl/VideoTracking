@@ -117,6 +117,9 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         weights[0] = 4
         weights = weights / weights.sum()
         adaBoost.train(train, targets, weights)
+        with measureTime("Ada boost learning"):
+            boost = cv2.Boost() 
+            boost.train(train.astype(np.float32),cv2.CV_ROW_SAMPLE, targets.astype(np.float32))
         indices = adaBoost.features()
     print np.unique(indices % 3)
 
@@ -140,6 +143,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         image, np.array([pf.target]).astype(np.float32), features.astype(np.float32), allFeatures)
         targetScore = adaBoost.score(targetVector)
         targetClass = adaBoost.predict(targetVector)
+        print boost.predict(targetVector.astype(np.float32), returnSum=True), boost.predict(targetVector.astype(np.float32))
         print "Score {0}, ".format(targetScore)
     with measureTime("Generating new samples:"):
         pos, neg = generateNewSamples(
