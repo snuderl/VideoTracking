@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4
+SIGMA_velocity = 6.4/1.5
 SIGMA_size = 0.64
 
 # State is represented as a numpy array

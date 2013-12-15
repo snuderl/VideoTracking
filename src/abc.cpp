@@ -271,6 +271,7 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 	cv::Mat out(particles.rows, features.rows*3, CV_64F, double(0.0));
 
 
+    #pragma unroll(2)
 	for(int i = 0; i < particles.rows; i++){
 		float x1 = particles.at<float>(i,0);
 		float y1 = particles.at<float>(i,1);
@@ -290,8 +291,8 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 		int h = integral.rows-1;
 		int w = integral.cols-1;
 
-	
 
+        #pragma unroll(32)
 		for(int l = 0; l < indices.rows; l++){
 			int indice = indices.at<int>(l,0);
 			int k = indice/3;
