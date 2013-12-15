@@ -280,17 +280,10 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 		cv::Mat subrect;
 		cv::Mat integral;
 
-
-		//cout << x1 << endl;	
-		//cout << y1 << endl;
-		//cout << height << endl;
-		//cout << width << endl;
-		
 		cv::getRectSubPix(image, cv::Size(int(width), int(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
 
 
 		cv::integral(subrect, integral, CV_64F);
-		//cout <<integral.at<int>(0,0) << " " <<integral.at<int>(5,5) << endl;
 		cv::Mat rgb[3];
 		cv::split(integral, rgb);
 
@@ -316,6 +309,8 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			D = rgb[color].at<double>(x2,y2);
 			C = rgb[color].at<double>(x1,y2);
 			B = rgb[color].at<double>(x2,y1);
+
+
 
 			double outer = A + D - C - B;
 	
