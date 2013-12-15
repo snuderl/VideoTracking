@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4/2
+SIGMA_velocity = 6.4
 SIGMA_size = 0.64
 
 # State is represented as a numpy array
@@ -51,7 +51,6 @@ class ParticleFilter():
         lam = 20
         # We have to clip the scores so they dont get to big after exponiating.
         # They should be between 0 and 1 regardles...
-	print scores.shape, scores.dtype
         np.clip(scores, 0, 1., scores)
         scores = np.exp(lam * scores)
         total = np.sum(scores)

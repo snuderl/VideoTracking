@@ -21,11 +21,11 @@ ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
 
-#filename = "Vid_B_cup"
-#target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
+filename = "Vid_B_cup"
+target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-#filename = "../data/Vid_D_person.avi"
-#target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
+filename = "Vid_D_person"
+target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
 if camera:
     capture = cv2.VideoCapture(0)
@@ -102,9 +102,10 @@ adaBoost = learner.Trainer(5)
 
 
 def call(*args):
-    return pysomemodule.ABC("ab").doSomething(*args)
+    features = pysomemodule.ABC("ab").doSomething(*args)
+    return features
 
-
+boost = None
 pool = Pool(4, init_worker)
 def iteration(image, pf, features, pos, neg, newSamples=5):
     image = image.astype(np.float32)
@@ -133,7 +134,13 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         r3 = pool.apply_async(call, [image, particles[2*size:3*size,:], features.astype(np.float32), indices])
         r4 = pool.apply_async(call, [image, particles[3*size:,:], features.astype(np.float32), indices])
         particle_features = np.vstack((r1.get(), r2.get(), r3.get(), r4.get()))
-        print particle_features.shape
+        #boost.predict(particle_features.astype(np.float32), returnSum=True)
+        #print particle_features.shape
+    # with measureTime("bla"):
+    #      scores = np.zeros((2000,), dtype=np.float32)
+    #      for i, row in enumerate(particle_features):
+    #          scores[i] = boost.predict(row.astype(np.float32), returnSum=True)
+    #      scores = 1 / (1 + np.exp(-scores.astype(np.float64)**2))
     with measureTime("Scoring particles:"):
         scores = adaBoost.score(particle_features)[:, 1]
     with measureTime("Updatingh weights:"):
@@ -143,7 +150,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         image, np.array([pf.target]).astype(np.float32), features.astype(np.float32), allFeatures)
         targetScore = adaBoost.score(targetVector)
         targetClass = adaBoost.predict(targetVector)
-        print boost.predict(targetVector.astype(np.float32), returnSum=True), boost.predict(targetVector.astype(np.float32))
+        print 1 / (1+ np.exp(-boost.predict(targetVector.astype(np.float32), returnSum=True))), boost.predict(targetVector.astype(np.float32))
         print "Score {0}, ".format(targetScore)
     with measureTime("Generating new samples:"):
         pos, neg = generateNewSamples(
@@ -235,7 +242,7 @@ if __name__ == "__main__":
 
             # for x in pf.particles:
                 #drawTarget(image, x)
-            print "Iterations: {0}".format(pf.iterations)
+            print "Frame: {0}".format(pf.iterations)
     except KeyboardInterrupt:
         print "Caught KeyboardInterrupt, terminating workers"
         cv2.destroyWindow ("test")
