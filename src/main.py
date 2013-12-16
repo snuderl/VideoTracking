@@ -21,11 +21,11 @@ ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
 
-#filename = "Vid_B_cup"
-#target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
+filename = "Vid_B_cup"
+target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-POS_EXAMPLES = 10
-NEG_EXAMPLES = 120
+POS_EXAMPLES = 15
+NEG_EXAMPLES = 140
 NEW_SAMPLES_PER_ITERATION = 5
 ADA_BOOST_FEATURES = 32
 POOL_SIZE = 2

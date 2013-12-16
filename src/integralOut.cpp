@@ -212,7 +212,6 @@ static int pyopencv_to(const PyObject* o, Mat& m, const char* name = "<unknown>"
         transposed = true;
     }
 
-
     if( ndims == 3 && size[2] <= CV_CN_MAX && step[1] == elemsize*size[2] )
     {
         ndims--;
@@ -272,37 +271,29 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 	cv::Mat out(particles.rows, features.rows*3, CV_64F, double(0.0));
 
 
+	cv::Mat integral;
+	cv::Mat rgb[3];
+	cv::integral(image, integral, CV_64F);
 	for(int i = 0; i < particles.rows; i++){
-		float x1 = particles.at<float>(i,0);
-		float y1 = particles.at<float>(i,1);
-		float width = particles.at<float>(i,2);
-		float height = particles.at<float>(i,3);
+		float x = particles.at<float>(i,0);
+		float y = particles.at<float>(i,1);
+		float w = particles.at<float>(i,2);
+		float h = particles.at<float>(i,3);
 
 		cv::Mat subrect;
-		cv::Mat integral;
+		cv::split(subrect, rgb);
 
-		cv::getRectSubPix(image, cv::Size(int(width), int(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
-
-
-		cv::integral(subrect, integral, CV_64F);
-		cv::Mat rgb[3];
-		cv::split(integral, rgb);
-
-
-
-		int h = integral.rows-1;
-		int w = integral.cols-1;
+		
 
 		for(int l = 0; l < indices.rows; l++){
 			int indice = indices.at<int>(l,0);
 			int k = indice/3;
 			int color = indice % 3;
 
-
-			int x1 = static_cast<int>(features.at<float>(k,0)*h);
-			int y1 = static_cast<int>(features.at<float>(k,1)*w);
-			int x2 = static_cast<int>(features.at<float>(k,2)*h);
-			int y2 = static_cast<int>(features.at<float>(k,3)*w);
+			int x1 = static_cast<int>(x + features.at<float>(k,0)*h);
+			int y1 = static_cast<int>(y + features.at<float>(k,1)*w);
+			int x2 = static_cast<int>(x + features.at<float>(k,2)*h);
+			int y2 = static_cast<int>(y + features.at<float>(k,3)*w);
 
 			double A,B,C,D;
 			//cout << x1 << " " << y1 << endl;
@@ -311,15 +302,13 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			C = rgb[color].at<double>(x1,y2);
 			B = rgb[color].at<double>(x2,y1);
 
-
-
 			double outer = A + D - C - B;
 	
 			//std::cout << "Coords" << x1 << " "<< y1 << " " << x2 << " " << y2 << std::endl;
-			x1 = static_cast<int>(features.at<float>(k,4)*h);
-			y1 = static_cast<int>(features.at<float>(k,5)*w);
-			x2 = static_cast<int>(features.at<float>(k,6)*h);
-			y2 = static_cast<int>(features.at<float>(k,7)*w);
+			x1 = static_cast<int>(x + features.at<float>(k,4)*h);
+			y1 = static_cast<int>(y + features.at<float>(k,5)*w);
+			x2 = static_cast<int>(x + features.at<float>(k,6)*h);
+			y2 = static_cast<int>(y + features.at<float>(k,7)*w);
 			A = rgb[color].at<double>(x1,y1);
 			D = rgb[color].at<double>(x2,y2);
 			C = rgb[color].at<double>(x1,y2);

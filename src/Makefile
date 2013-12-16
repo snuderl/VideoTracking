@@ -14,10 +14,10 @@ SRC = pysomemodule.cpp abc.cpp
 OBJ = pysomemodule.o abc.o
 
 $(TARGET).so: $(OBJ)
-	g++ -O3 -march=native -shared $(OBJ) -L$(BOOST_LIB) -lboost_python -L/usr/lib/python$(PYTHON_VERSION)/config -lpython$(PYTHON_VERSION) -o $(TARGET).so $(OPENCV_LIB) 
+	g++ -O3 -mtune=native -march=native -shared $(OBJ) -L$(BOOST_LIB) -lboost_python -L/usr/lib/python$(PYTHON_VERSION)/config -lpython$(PYTHON_VERSION) -o $(TARGET).so $(OPENCV_LIB) 
 
 $(OBJ): $(SRC)
-	g++ -O3 -march=native -I$(PYTHON_INCLUDE) -I$(BOOST_INC) $(OPENCV_CFLAGS) -fPIC -c $(SRC)
+	g++ -O3 -mtune=native -march=native -I$(PYTHON_INCLUDE) -I$(BOOST_INC) $(OPENCV_CFLAGS) -fPIC -c $(SRC)
 
 clean:
 	rm -f $(OBJ)

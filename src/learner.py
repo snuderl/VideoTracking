@@ -14,7 +14,7 @@ class Trainer:
         # self.trainer = ExtraTreesClassifier(
         #     max_features=self.n, n_estimators=self.n)
         self.trainer = RandomForestClassifier(
-             max_features=self.n, n_estimators=self.n, max_depth=2)
+             max_features=self.n, n_estimators=14, max_depth=2)
         
     def features(self):
         f = np.array(self.trainer.feature_importances_.argsort()[-self.n:][::-1])
