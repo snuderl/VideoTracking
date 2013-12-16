@@ -8,9 +8,9 @@ from contextlib import contextmanager
 
 @contextmanager
 def measureTime(title):
-    t1 = time.clock()
+    t1 = time.time()
     yield
-    t2 = time.clock()
+    t2 = time.time()
     print '%s: %0.2f seconds elapsed' % (title, t2-t1)
 
 def cropImage(image, rectangle):

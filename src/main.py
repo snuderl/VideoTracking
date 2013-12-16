@@ -27,16 +27,19 @@ target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 POS_EXAMPLES = 10
 NEG_EXAMPLES = 120
 NEW_SAMPLES_PER_ITERATION = 5
+ADA_BOOST_FEATURES = 32
+POOL_SIZE = 2
+PARTICLES = 2000
 
-filename = "Vid_D_person"
-target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
+#filename = "Vid_D_person"
+#target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
 
-# filename = "Vid_C_juice"
-# target = (0.410029*320, 0.208388*240, 0.114061*320, 0.373526*240)
+#filename = "Vid_C_juice"
+#target = (0.410029*320, 0.208388*240, 0.114061*320, 0.373526*240)
 
 
-#filename = "Vid_E_person_partially_occluded"
-#target = (0.434343*320, 0.18461*240, 0.167388*320, 0.675*240)
+filename = "Vid_E_person_partially_occluded"
+target = (0.434343*320, 0.18461*240, 0.167388*320, 0.675*240)
 
 if camera:
     capture = cv2.VideoCapture(0)
@@ -109,15 +112,13 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=NEW_SAMPLES_PER
 
     return pos, neg
 
-adaBoost = learner.Trainer(5)
+adaBoost = learner.Trainer(ADA_BOOST_FEATURES)
 
 
 def call(*args):
     features = pysomemodule.ABC("ab").doSomething(*args)
     return features
 
-POOL_SIZE = cpu_count()
-PARTICLES = 1200
 pool = Pool(None, init_worker)
 def iteration(image, pf, features, pos, neg, newSamples=5):
     image = image.astype(np.float32)
@@ -127,7 +128,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         targets = np.zeros((pos.shape[0] + neg.shape[0]))
         targets[:pos.shape[0]] = 1  
         weights = np.ones(targets.shape)
-        weights[0] = 4
+        weights[0] = 10
         weights = weights / weights.sum()
         adaBoost.train(train, targets, weights)
         indices = adaBoost.features()
@@ -144,15 +145,7 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
             else:
                 results.append(pool.apply_async(call, [image, particles[size*x:size*(x+1),:], features, indices]))
         particle_features = np.vstack((map(lambda x: x.get(), results)))
-        #particle_features = pysomemodule.ABC("ab").doSomething(image, particles, features, indices)
-        print particle_features.shape
-        #boost.predict(particle_features.astype(np.float32), returnSum=True)
-        #print particle_features.shape
-    # with measureTime("bla"):
-    #      scores = np.zeros((2000,), dtype=np.float32)
-    #      for i, row in enumerate(particle_features):
-    #          scores[i] = boost.predict(row.astype(np.float32), returnSum=True)
-    #      scores = 1 / (1 + np.exp(-scores.astype(np.float64)**2))
+
     with measureTime("Scoring particles:"):
         scores = adaBoost.score(particle_features)[:, 1]
     with measureTime("Updatingh weights:"):
@@ -183,7 +176,7 @@ def start(image):
 
     return target, pf, features
 
-featuresCount = 100
+featuresCount = 80
 allFeatures = np.array(list(range(0,featuresCount*3)))
 iterationCount = 0
 if __name__ == "__main__":
@@ -201,59 +194,58 @@ if __name__ == "__main__":
         p = abc.test(image, target.astype(np.float32))
         cv2.imshow("test", p)
         while retval:
+            with measureTime("Frame processed in"):
+                cv2.imshow("video", image)
+                key = cv2.waitKey(10) & 0xFF
+                if key == ord('q'):
+                    break
+                if key == ord('c'):
+                    pass
+                retval, image = capture.read()
+                iterationCount += 1
+                with measureTime("Iteration {}".format(iterationCount)):
+                    pos, neg = iteration(image, pf, features, pos, neg)
+                text = "Iteration {}".format(iterationCount)
+                cv2.putText(image, text, (
+                    20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+
+                # for p in pf.particles:
+                #     drawParticle(image, p)
+                #     displayParticles = True
+                #     while displayParticles:
+                #         key = cv2.waitKey(500) & 0xFF
+                #         if key == ord('c'):
+                #             break
+                #         if key == ord('q'):
+                #             displayParticles = False
+                #     if not displayParticles:
+                #         break
+                target = pf.target
 
 
-            cv2.imshow("video", image)
-            key = cv2.waitKey(10) & 0xFF
-            if key == ord('q'):
-                break
-            if key == ord('c'):
-                pass
-            retval, image = capture.read()
-            iterationCount += 1
-            with measureTime("Iteration {}".format(iterationCount)):
-                pos, neg = iteration(image, pf, features, pos, neg)
-            text = "Iteration {}".format(iterationCount)
-            cv2.putText(image, text, (
-                20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
+                #directory =  "out/{}".format(filename)
+                #if not os.path.exists(directory):
+                #    os.makedirs(directory)
+                # cv2.imwrite(
+                #     "out/{}/target{}.jpg".format(filename, iterationCount),
+                #     utils.cropImage(image, target))
 
-            # for p in pf.particles:
-            #     drawParticle(image, p)
-            #     displayParticles = True
-            #     while displayParticles:
-            #         key = cv2.waitKey(500) & 0xFF
-            #         if key == ord('c'):
-            #             break
-            #         if key == ord('q'):
-            #             displayParticles = False
-            #     if not displayParticles:
-            #         break
-            target = pf.target
+                drawTarget(image, target)
+                drawParticle(image, target)
 
-
-            #directory =  "out/{}".format(filename)
-            #if not os.path.exists(directory):
-            #    os.makedirs(directory)
-            cv2.imwrite(
-                "out/{}/target{}.jpg".format(filename, iterationCount),
-                utils.cropImage(image, target))
-
-            drawTarget(image, target)
-            drawParticle(image, target)
-
-            cv2.imwrite(
-                "out/{}/image{}.jpg".format(filename, iterationCount),
-                image)
-
-
+                # cv2.imwrite(
+                #     "out/{}/image{}.jpg".format(filename, iterationCount),
+                #     image)
 
 
 
 
 
-            # for x in pf.particles:
-                #drawTarget(image, x)
-            print "Frame: {0}".format(pf.iterations)
+
+
+                # for x in pf.particles:
+                    #drawTarget(image, x)
+                print "Frame: {0}".format(pf.iterations)
     except KeyboardInterrupt:
         print "Caught KeyboardInterrupt, terminating workers"
         cv2.destroyWindow ("test")

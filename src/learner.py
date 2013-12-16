@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier,GradientBoostingClassifier,RandomForestClassifier
 
 
 class Trainer:
@@ -8,6 +8,11 @@ class Trainer:
         self.n = n
         self.trainer = AdaBoostClassifier(
             n_estimators=self.n)
+        self.trainer = ExtraTreesClassifier(
+            max_features=self.n, n_estimators=self.n)
+        self.trainer = RandomForestClassifier(
+            max_features=self.n, n_estimators=self.n, max_depth=3)
+        
     def features(self):
         f = np.array(self.trainer.feature_importances_.argsort()[-self.n:][::-1])
         return f 
