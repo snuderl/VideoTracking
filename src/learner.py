@@ -1,17 +1,20 @@
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier,GradientBoostingClassifier,RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 
 class Trainer:
 
     def __init__(self, n=32):
         self.n = n
+        self.trainer = AdaBoostClassifier(DecisionTreeClassifier(),
+            n_estimators=self.n)        
         self.trainer = AdaBoostClassifier(
             n_estimators=self.n)
-        self.trainer = ExtraTreesClassifier(
-            max_features=self.n, n_estimators=self.n)
+        # self.trainer = ExtraTreesClassifier(
+        #     max_features=self.n, n_estimators=self.n)
         self.trainer = RandomForestClassifier(
-            max_features=self.n, n_estimators=self.n, max_depth=3)
+             max_features=self.n, n_estimators=self.n, max_depth=2)
         
     def features(self):
         f = np.array(self.trainer.feature_importances_.argsort()[-self.n:][::-1])
