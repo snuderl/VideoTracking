@@ -41,6 +41,9 @@ PARTICLES = 2000
 #filename = "Vid_E_person_partially_occluded"
 #target = (0.434343*320, 0.18461*240, 0.167388*320, 0.675*240)
 
+filename = "Vid_C_juice"
+target = (0 * 320, 0.410029 * 240, 0.208388 * 320, 0.114061 * 240)
+
 if camera:
     capture = cv2.VideoCapture(0)
 else:
