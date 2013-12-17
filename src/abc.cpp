@@ -6,6 +6,7 @@
 #include "opencv2/core/core.hpp"
 #include <cv.h>
 #include <iostream>
+#include <cmath>
 
 
 
@@ -267,6 +268,10 @@ ABC::ABC(const std::string &someConfigFile)
   import_array(); // This is a function from NumPy that MUST be called.
   // Do other stuff
 }
+
+
+
+
 #include <opencv2/highgui/highgui.hpp>
 cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indices){
 	cv::Mat out(particles.rows, features.rows*3, CV_64F, double(0.0));
@@ -281,7 +286,7 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 		cv::Mat subrect;
 		cv::Mat integral;
 
-		cv::getRectSubPix(image, cv::Size(int(width), int(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
+		cv::getRectSubPix(image, cv::Size(round(width), round(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
 
 
 		cv::integral(subrect, integral, CV_64F);
@@ -298,6 +303,8 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			int k = indice/3;
 			int color = indice % 3;
 
+            cv::Mat colorMat = rgb[color];
+
 
 			int x1 = static_cast<int>(features.at<float>(k,0)*h);
 			int y1 = static_cast<int>(features.at<float>(k,1)*w);
@@ -306,10 +313,10 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 
 			double A,B,C,D;
 			//cout << x1 << " " << y1 << endl;
-			A = rgb[color].at<double>(x1,y1);
-			D = rgb[color].at<double>(x2,y2);
-			C = rgb[color].at<double>(x1,y2);
-			B = rgb[color].at<double>(x2,y1);
+			A = colorMat.at<double>(x1,y1);
+			D = colorMat.at<double>(x2,y2);
+			C = colorMat.at<double>(x1,y2);
+			B = colorMat.at<double>(x2,y1);
 
 
 
@@ -320,10 +327,10 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			y1 = static_cast<int>(features.at<float>(k,5)*w);
 			x2 = static_cast<int>(features.at<float>(k,6)*h);
 			y2 = static_cast<int>(features.at<float>(k,7)*w);
-			A = rgb[color].at<double>(x1,y1);
-			D = rgb[color].at<double>(x2,y2);
-			C = rgb[color].at<double>(x1,y2);
-			B = rgb[color].at<double>(x2,y1);
+			A = colorMat.at<double>(x1,y1);
+			D = colorMat.at<double>(x2,y2);
+			C = colorMat.at<double>(x1,y2);
+			B = colorMat.at<double>(x2,y1);
 		
 			
 			double inner = A + D - C - B;
@@ -342,10 +349,10 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 				//y1 = static_cast<int>(features.at<float>(k,1)*w);
 				//x2 = static_cast<int>(features.at<float>(k,2)*h);
 				//y2 = static_cast<int>(features.at<float>(k,3)*w);
-				//A = rgb[color].at<double>(x1,y1);
-				//D = rgb[color].at<double>(x2,y2);
-				//C = rgb[color].at<double>(x1,y2);
-				//B = rgb[color].at<double>(x2,y1);
+				//A = colorMat.at<double>(x1,y1);
+				//D = colorMat.at<double>(x2,y2);
+				//C = colorMat.at<double>(x1,y2);
+				//B = colorMat.at<double>(x2,y1);
 
 	 			//std::cout << x1 << " "<< y1 << " " << x2 << " " << y2 << std::endl;
 				//std::cout << A << " "<< D << " " << C << " " << B << std::endl;

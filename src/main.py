@@ -21,15 +21,16 @@ ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
 
-#filename = "Vid_B_cup"
-#target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
+filename = "Vid_B_cup"
+target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-POS_EXAMPLES = 15
-NEG_EXAMPLES = 140
-NEW_SAMPLES_PER_ITERATION = 5
+POS_EXAMPLES = 10
+NEG_EXAMPLES = 120
+NEW_SAMPLES_PER_ITERATION = 3
 ADA_BOOST_FEATURES = 32
 POOL_SIZE = 2
-PARTICLES = 2000
+PARTICLES = 1000
+featuresCount = 100
 
 #filename = "Vid_D_person"
 #target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
@@ -90,11 +91,11 @@ def generateNewSamples(image, pf, features, pos, neg, newSamples=NEW_SAMPLES_PER
     negative = np.array(list(generator))
     examples = np.vstack((negative, positive))
 
-    image = image.astype(np.float32)
+    image = image
     examples = examples.astype(np.float32)
 
     feature_vector = np.nan_to_num(abc.doSomething(
-        image.astype(np.float32), examples, features, allFeatures))
+        image, examples, features, allFeatures))
     #print feature_vector, feature_vector.dtype
     if not neg == None:
         if neg.shape[0] < NEG_EXAMPLES:
@@ -124,17 +125,18 @@ def call(*args):
 
 pool = Pool(None, init_worker)
 def iteration(image, pf, features, pos, neg, newSamples=5):
-    image = image.astype(np.float32)
+    image = image
 
     with measureTime("Ada boost learning"):
         train = np.vstack((pos, neg))
         targets = np.zeros((pos.shape[0] + neg.shape[0]))
         targets[:pos.shape[0]] = 1  
         weights = np.ones(targets.shape)
-        weights[0] = 10
+        weights[0] = 20
         weights = weights / weights.sum()
         adaBoost.train(train, targets, weights)
         indices = adaBoost.features()
+        indices.sort()
 
     with measureTime("Updating particles"):
         pf.updateParticles()
@@ -150,14 +152,13 @@ def iteration(image, pf, features, pos, neg, newSamples=5):
         particle_features = np.vstack((map(lambda x: x.get(), results)))
 
     with measureTime("Scoring particles:"):
-        scores = adaBoost.score(particle_features)[:, 1]
+        probabilities = adaBoost.predict(particle_features)
     with measureTime("Updatingh weights:"):
-        pf.updateWeights(scores)
+        pf.updateWeights(probabilities)
     with measureTime("Scoring target particle:"):
         targetVector = abc.doSomething(
         image, np.array([pf.target]).astype(np.float32), features, indices)
-        targetScore = adaBoost.score(targetVector)
-        targetClass = adaBoost.predict(targetVector)
+        targetScore = adaBoost.predict(targetVector)
         print "Score {0}, ".format(targetScore)
     with measureTime("Generating new samples:"):
         pos, neg = generateNewSamples(
@@ -179,7 +180,6 @@ def start(image):
 
     return target, pf, features
 
-featuresCount = 80
 allFeatures = np.array(list(range(0,featuresCount*3)))
 iterationCount = 0
 if __name__ == "__main__":

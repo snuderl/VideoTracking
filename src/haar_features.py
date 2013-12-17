@@ -5,7 +5,6 @@ import matplotlib.collections as collections
 from matplotlib.colors import ColorConverter
 import cv2
 
-from skimage.transform import integral_image
 
 # We represent a center surrond haar feature
 # as an array of 4 points and a color selector
