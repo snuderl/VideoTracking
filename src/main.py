@@ -1,18 +1,10 @@
 import cv2
 import cv
-import particle
-import haar_features as haar
-import numpy as np
-import learner
-import utils
 import os
 from utils import measureTime
-from skimage.transform import integral_image
-import pysomemodule
-import signal
+from algorithm import Algorithm
+import utils
 
-def init_worker():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 camera = False
 
@@ -24,13 +16,7 @@ target = (200, 110, 50, 55)
 filename = "Vid_B_cup"
 target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-POS_EXAMPLES = 10
-NEG_EXAMPLES = 120
-NEW_SAMPLES_PER_ITERATION = 3
-ADA_BOOST_FEATURES = 32
-POOL_SIZE = 2
-PARTICLES = 1000
-featuresCount = 100
+
 
 #filename = "Vid_D_person"
 #target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
@@ -51,7 +37,6 @@ else:
     capture = cv2.VideoCapture(directory + filename + ext)
 
 
-abc = pysomemodule.ABC("ab")
 
 cv2.namedWindow("video")
 cv2.namedWindow("particle")
@@ -76,126 +61,13 @@ def drawParticle(image, target):
 
 
 
-from multiprocessing import Pool, cpu_count
-
-
-
-
-def generateNewSamples(image, pf, features, pos, neg, newSamples=NEW_SAMPLES_PER_ITERATION):
-    positive = pf.target.reshape((1, 4))
-    generator = utils.rectangleGenerator(
-        image.shape[1],
-        image.shape[0],
-        newSamples,
-        invalid=pf.target)
-    negative = np.array(list(generator))
-    examples = np.vstack((negative, positive))
-
-    image = image
-    examples = examples.astype(np.float32)
-
-    feature_vector = np.nan_to_num(abc.doSomething(
-        image, examples, features, allFeatures))
-    #print feature_vector, feature_vector.dtype
-    if not neg == None:
-        if neg.shape[0] < NEG_EXAMPLES:
-            neg = np.vstack((neg, feature_vector[:-1, :]))
-        else:
-            neg[np.random.randint(0,neg.shape[0], (newSamples))] = feature_vector[:-1, :]
-        positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
-
-        if pos.shape[0] >= POS_EXAMPLES:
-            pos[np.random.randint(1,POS_EXAMPLES), :] = positive
-        else:
-            pos = np.vstack((pos, positive))
-
-    else:
-        neg = feature_vector[:-1, :]
-        positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
-        pos = positive
-
-    return pos, neg
-
-adaBoost = learner.Trainer(ADA_BOOST_FEATURES)
-
-
-def call(*args):
-    features = pysomemodule.ABC("ab").doSomething(*args)
-    return features
-
-pool = Pool(None, init_worker)
-def iteration(image, pf, features, pos, neg, newSamples=5):
-    image = image
-
-    with measureTime("Ada boost learning"):
-        train = np.vstack((pos, neg))
-        targets = np.zeros((pos.shape[0] + neg.shape[0]))
-        targets[:pos.shape[0]] = 1  
-        weights = np.ones(targets.shape)
-        weights[0] = 20
-        weights = weights / weights.sum()
-        adaBoost.train(train, targets, weights)
-        indices = adaBoost.features()
-        indices.sort()
-
-    with measureTime("Updating particles"):
-        pf.updateParticles()
-    with measureTime("Calculating particle features"):
-        particles = pf.particles.astype(np.float32)
-        results = []
-        size = PARTICLES/POOL_SIZE
-        for x in range(POOL_SIZE):
-            if x==POOL_SIZE-1:
-                results.append(pool.apply_async(call, [image, particles[size*x:,:], features, indices]))
-            else:
-                results.append(pool.apply_async(call, [image, particles[size*x:size*(x+1),:], features, indices]))
-        particle_features = np.vstack((map(lambda x: x.get(), results)))
-
-    with measureTime("Scoring particles:"):
-        probabilities = adaBoost.predict(particle_features)
-    with measureTime("Updatingh weights:"):
-        pf.updateWeights(probabilities)
-    with measureTime("Scoring target particle:"):
-        targetVector = abc.doSomething(
-        image, np.array([pf.target]).astype(np.float32), features, indices)
-        targetScore = adaBoost.predict(targetVector)
-        print "Score {0}, ".format(targetScore)
-    with measureTime("Generating new samples:"):
-        pos, neg = generateNewSamples(
-            image, pf, features, pos, neg, newSamples)
-
-    return pos, neg
-
-
-def start(image):
-    directory = "out/{}".format(filename, iterationCount)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    # Initialize particles
-    pf = particle.ParticleFilter(target, PARTICLES, image.shape[:2])
-    # Generate haar features
-    features = haar.generateHaarFeatures(featuresCount).astype(np.float32)
-    #print features
-
-    return target, pf, features
-
-allFeatures = np.array(list(range(0,featuresCount*3)))
 iterationCount = 0
 if __name__ == "__main__":
     try:
-        pos, neg = None, None
-        print pos
+        algo = Algorithm(2)
         if(capture.isOpened):
-            #open("out/{}/output.txt".format(filename), "w")
             retval, image = capture.read()
-            target, pf, features = start(image)
-            pos, neg = generateNewSamples(image, pf, features, pos, neg, 100)
-            pos, neg = iteration(image, pf, features, pos, neg)
-            target = pf.target
-
-        p = abc.test(image, target.astype(np.float32))
-        cv2.imshow("test", p)
+            algo.start(image, target)
         while retval:
             with measureTime("Frame processed in"):
                 cv2.imshow("video", image)
@@ -207,7 +79,7 @@ if __name__ == "__main__":
                 retval, image = capture.read()
                 iterationCount += 1
                 with measureTime("Iteration {}".format(iterationCount)):
-                    pos, neg = iteration(image, pf, features, pos, neg)
+                    algo.next(image)
                 text = "Iteration {}".format(iterationCount)
                 cv2.putText(image, text, (
                     20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 255)
@@ -223,7 +95,7 @@ if __name__ == "__main__":
                 #             displayParticles = False
                 #     if not displayParticles:
                 #         break
-                target = pf.target
+                target = algo.target
 
 
                 #directory =  "out/{}".format(filename)
@@ -239,20 +111,14 @@ if __name__ == "__main__":
                 # cv2.imwrite(
                 #     "out/{}/image{}.jpg".format(filename, iterationCount),
                 #     image)
-
-
-
-
-
-
-
                 # for x in pf.particles:
                     #drawTarget(image, x)
-                print "Frame: {0}".format(pf.iterations)
+                print "Frame: {0}".format(algo.iterations)
     except KeyboardInterrupt:
         print "Caught KeyboardInterrupt, terminating workers"
         cv2.destroyWindow ("test")
         cv2.destroyWindow ("video")
         cv2.destroyWindow ("particle")
-        pool.terminate()
-        pool.join()
+        if algo.pool:
+            pool.terminate()
+            pool.join()
