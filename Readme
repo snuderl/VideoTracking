@@ -2,8 +2,13 @@ Dependencies:
 	Python 2.7
 	Numpy
 	Scipy
-	Scipy-Learn
+	Scikit-learn
+	Scikit-image
+	Pygame
 	OpenCV
+	OpenCV Python
+	Boost
+	Boost Python
 
 Haar-like feature detection:
 	imamo kvadrat z manjšim poljem temne barve
