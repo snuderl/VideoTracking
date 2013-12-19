@@ -318,8 +318,6 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			C = colorMat.at<double>(x1,y2);
 			B = colorMat.at<double>(x2,y1);
 
-
-
 			double outer = A + D - C - B;
 	
 			//std::cout << "Coords" << x1 << " "<< y1 << " " << x2 << " " << y2 << std::endl;
@@ -331,35 +329,15 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 			D = colorMat.at<double>(x2,y2);
 			C = colorMat.at<double>(x1,y2);
 			B = colorMat.at<double>(x2,y1);
+
 		
 			
 			double inner = A + D - C - B;
 			double sum = outer - (2 *inner);
 
-
-			
-			if(sum < 0){
-					
-	
-	 			//std::cout << "shape " << h+1 << " "<< w+1 <<  std::endl;
-	 			//std::cout << "coords" << x1 << " "<< y1 << " " << x2 << " " << y2 << std::endl;
-				//std::cout << A << " "<< D << " " << C << " " << B << std::endl;
-
-				//x1 = static_cast<int>(features.at<float>(k,0)*h);
-				//y1 = static_cast<int>(features.at<float>(k,1)*w);
-				//x2 = static_cast<int>(features.at<float>(k,2)*h);
-				//y2 = static_cast<int>(features.at<float>(k,3)*w);
-				//A = colorMat.at<double>(x1,y1);
-				//D = colorMat.at<double>(x2,y2);
-				//C = colorMat.at<double>(x1,y2);
-				//B = colorMat.at<double>(x2,y1);
-
-	 			//std::cout << x1 << " "<< y1 << " " << x2 << " " << y2 << std::endl;
-				//std::cout << A << " "<< D << " " << C << " " << B << std::endl;
-
-				//std::cout << sum << " " << outer << " " << inner << std::endl;      
-				sum = 0;
-			}
+            if(inner > outer){
+                std::cout << "Inner cant be greater than outer" << std::endl;
+            }
 
 			out.at<double>(i, indice) = sum;
 		}

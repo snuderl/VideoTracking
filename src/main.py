@@ -120,5 +120,5 @@ if __name__ == "__main__":
         cv2.destroyWindow ("video")
         cv2.destroyWindow ("particle")
         if algo.pool:
-            pool.terminate()
-            pool.join()
+            self.pool.terminate()
+            self.pool.join()
