@@ -17,6 +17,7 @@ class ParticleFilter():
         self.particles = createInitialParticles(self.target, count)
         self.iterations = 0
         self.bounds = bounds
+        self.deg = 0
 
     def updateParticles(self):
         # Update positions with velocity
@@ -48,7 +49,7 @@ class ParticleFilter():
         # TODO update weight
 
     def updateWeights(self, scores):
-        lam = 20
+        lam = 25
         # We have to clip the scores so they dont get to big after exponiating.
         # They should be between 0 and 1 regardles...
         np.clip(scores, 0, 1., scores)
@@ -56,7 +57,18 @@ class ParticleFilter():
         total = np.sum(scores)
         self.particles[:, 6] = scores / total
         assert np.abs(np.sum(self.particles[:, 6]) - 1) < 0.1
+
+        N_eff = 1 / np.sum(self.particles[:,6]**2)
+        if N_eff < self.count / 10.0:
+            self.resample()
+            self.particles[:,6] = 1 / float(self.count)
+            self.deg += 1
+            print self.deg
+            print "Degenerate, resampling"
+
+
         self.target = self.getTrackedObject()
+
         self.resample()
 
     def resample(self):
