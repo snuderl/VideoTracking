@@ -6,6 +6,15 @@ import cv2
 from contextlib import contextmanager
 
 
+def drawParticle(image, target):
+    image = image.copy()
+    image = cropImage(image, target)
+    return image
+
+def drawTarget(image, target):
+    cv2.rectangle(image, (int(target[0]), int(target[1])), (
+        int(target[0] + target[2]), int(target[1] + target[3])), 4)
+
 @contextmanager
 def measureTime(title):
     t1 = time.time()

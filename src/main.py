@@ -8,7 +8,7 @@ import utils
 
 camera = False
 
-directory = ""
+directory = "../data/"
 ext = ".avi"
 filename = "Vid_A_ball"
 target = (200, 110, 50, 55)
@@ -40,7 +40,7 @@ else:
 
 cv2.namedWindow("video")
 cv2.namedWindow("particle")
-cv2.namedWindow("test")
+#cv2.namedWindow("test")
 
 def onMouse(event, x, y, a, b):
     if event == 1:
@@ -49,22 +49,10 @@ def onMouse(event, x, y, a, b):
 cv2.setMouseCallback("video", onMouse, param=None)
 
 
-def drawTarget(image, target):
-    cv2.rectangle(image, (int(target[0]), int(target[1])), (
-        int(target[0] + target[2]), int(target[1] + target[3])), 4)
-
-
-def drawParticle(image, target):
-    image = image.copy()
-    image = utils.cropImage(image, target)
-    cv2.imshow("particle", image)
-
-
-
 iterationCount = 0
 if __name__ == "__main__":
     try:
-        algo = Algorithm(2)
+        algo = Algorithm(1)
         if(capture.isOpened):
             retval, image = capture.read()
             algo.start(image, target)
@@ -105,9 +93,9 @@ if __name__ == "__main__":
                 #     "out/{}/target{}.jpg".format(filename, iterationCount),
                 #     utils.cropImage(image, target))
 
-                drawTarget(image, target)
-                drawParticle(image, target)
-
+                utils.drawTarget(image, target)
+                targetImage = utils.drawParticle(image, target)
+                cv2.imshow("particle", targetImage)
                 # cv2.imwrite(
                 #     "out/{}/image{}.jpg".format(filename, iterationCount),
                 #     image)
