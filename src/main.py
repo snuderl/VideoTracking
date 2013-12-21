@@ -65,6 +65,8 @@ if __name__ == "__main__":
                 if key == ord('c'):
                     pass
                 retval, image = capture.read()
+                if not retval:
+                    break
                 iterationCount += 1
                 with measureTime("Iteration {}".format(iterationCount)):
                     algo.next(image)

@@ -274,19 +274,21 @@ ABC::ABC(const std::string &someConfigFile)
 
 #include <opencv2/highgui/highgui.hpp>
 cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indices){
+    cv::Mat small;
+    cv::resize(image, small, cv::Size(image.cols/2, image.rows/2));
 	cv::Mat out(particles.rows, features.rows*3, CV_64F, double(0.0));
 
 
 	for(int i = 0; i < particles.rows; i++){
-		float x1 = particles.at<float>(i,0);
-		float y1 = particles.at<float>(i,1);
-		float width = particles.at<float>(i,2);
-		float height = particles.at<float>(i,3);
+		float x1 = particles.at<float>(i,0)/2;
+		float y1 = particles.at<float>(i,1)/2;
+		float width = particles.at<float>(i,2)/2;
+		float height = particles.at<float>(i,3)/2;
 
 		cv::Mat subrect;
 		cv::Mat integral;
 
-		cv::getRectSubPix(image, cv::Size(round(width), round(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
+		cv::getRectSubPix(small, cv::Size(round(width), round(height)), cv::Point2f(x1+width/2,y1+height/2), subrect);
 
 
 		cv::integral(subrect, integral, CV_64F);
@@ -346,6 +348,7 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 
 	return out;
 }
+
 
 
 // The conversions functions above are taken from OpenCV. The following function is 

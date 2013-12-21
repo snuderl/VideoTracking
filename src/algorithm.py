@@ -39,7 +39,7 @@ class Algorithm:
 
     def start(self, image, target):
         # Initialize particles
-        self.image = image.astype(np.float32)
+        self.image = image
         self.pf = particle.ParticleFilter(target, config.PARTICLES, image.shape[:2])
         # Generate haar features
         self.features = haar.generateHaarFeatures(config.FEATURES_COUNT).astype(np.float32)
@@ -49,7 +49,7 @@ class Algorithm:
         self.iterations = 0
 
     def next(self, image):
-        self.image = image.astype(np.float32)
+        self.image = image
         pos, neg = self.pos, self.neg
         with measureTime("Ada boost learning"):
             train = np.vstack((pos, neg))
