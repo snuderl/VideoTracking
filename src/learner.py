@@ -1,4 +1,5 @@
 import numpy as np
+import utils
 from sklearn.ensemble import AdaBoostClassifier, ExtraTreesClassifier,GradientBoostingClassifier,RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 
@@ -29,8 +30,14 @@ class Trainer:
 
     def train(self, train, test, weights):
         self.trainer.fit(train, test, sample_weight=weights)
+        self.f = self.features()
         #self.trainer.fit(train, test)
 
     def predict(self, data):
         scores = self.trainer.predict_proba(data)[:, 1]
         return scores
+
+    def drawFeatures(self, image, features):
+        for index in self.f:
+            feature = features[int(index/3)]
+            utils.drawTarget(image, feature[:4])

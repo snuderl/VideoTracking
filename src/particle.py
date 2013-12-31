@@ -88,6 +88,7 @@ class ParticleFilter():
         return np.sum(rect * weights.T, axis=0)
 
 
+
 def particleToString(particle):
     return "Weight: {6}, (x:{0}, y:{1}), (w:{2},h:{3}), (vx:{4},vy:{5})".format(*particle)
 
