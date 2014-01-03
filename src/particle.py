@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4
+SIGMA_velocity = 6.4 
 SIGMA_size = 0.64
 
 # State is represented as a numpy array
@@ -35,10 +35,10 @@ class ParticleFilter():
         #np.clip(self.particles[:,4:6], -MAX_velocity,MAX_velocity, self.particles[:,4:6])
 
         lb = [0, 0, 1, 1, -MAX_velocity, -MAX_velocity, 0]
-        ub = [self.bounds[0],
-              self.bounds[1],
+        ub = [self.bounds[1],
               self.bounds[0],
               self.bounds[1],
+              self.bounds[0],
               MAX_velocity,
               MAX_velocity,
               1]

@@ -11,16 +11,17 @@ def drawParticle(image, target):
     image = cropImage(image, target)
     return image
 
-def drawTarget(image, target):
+def drawTarget(image, target, color=(0,0,0)):
     cv2.rectangle(image, (int(target[0]), int(target[1])), (
-        int(target[0] + target[2]), int(target[1] + target[3])), 4)
+        int(target[0] + target[2]), int(target[1] + target[3])), color)
 
 @contextmanager
-def measureTime(title):
+def measureTime(title, switch):
     t1 = time.time()
     yield
     t2 = time.time()
-    print '%s: %0.2f seconds elapsed' % (title, t2-t1)
+    if switch:
+        print '%s: %0.2f seconds elapsed' % (title, t2-t1)
 
 def cropImage(image, rectangle):
     x, y = rectangle[0], rectangle[1]

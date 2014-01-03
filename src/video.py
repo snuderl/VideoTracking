@@ -33,19 +33,24 @@ def process(inFile, outFile, targets):
 		if retval:
 			for algo in algorithms:
 				algo.next(image)
-				utils.drawTarget(image, algo.target)
+				color = (255, 0, 0)
+				if algo.valid:
+					color = (0, 255, 0)
+				utils.drawTarget(image, algo.target, color)
 			writer.write(image)
 
 
 
 path = "../data/"
 files = [ f for f in listdir(path) if isfile(join(path,f)) ]
+files = [f for f in files if f.startswith("Vid_I")]
 videos = [x for x in files if x.endswith(".avi")]
 texts = [x for x in files if x.endswith(".txt")]
 
 
 for video in videos:
 	name = video[:5]
+	print "Starting file ", name
 	targets = [x for x in texts if x.startswith(name)]
 	
 	targetsCoord = []

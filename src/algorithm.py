@@ -18,6 +18,8 @@ def init_worker():
 
 class Algorithm:
     def __init__(self, threads=1):
+        self.iterations = True
+        self.debug = False
         self.adaBoost = learner.Trainer(config.ADA_BOOST_FEATURES)
         if threads>1:
             self.pool = Pool(threads, init_worker)
@@ -28,6 +30,7 @@ class Algorithm:
         self.pos = None
         self.neg = None
         self.iterations = -1
+        self.dataChanged = True
 
     @property
     def particles(self):
@@ -50,36 +53,43 @@ class Algorithm:
         self.iterations = 0
 
     def next(self, image):
-        self.image = image
-        pos, neg = self.pos, self.neg
-        with measureTime("Ada boost learning"):
-            train = np.vstack((pos, neg))
-            targets = np.zeros((pos.shape[0] + neg.shape[0]))
-            targets[:pos.shape[0]] = 1  
-            weights = np.ones(targets.shape)
-            weights[0] = 20
-            weights = weights / weights.sum()
-            self.adaBoost.train(train, targets, weights)
-            self.indices = self.adaBoost.features()
+        with measureTime("Iteration in", self.iterations):
+            self.image = image
+            pos, neg = self.pos, self.neg
+            with measureTime("Ada boost learning", self.debug):
+                if self.dataChanged or len(self.pos) < config.POS_EXAMPLES:
+                    train = np.vstack((pos, neg))
+                    targets = np.zeros((pos.shape[0] + neg.shape[0]))
+                    targets[:pos.shape[0]] = 1  
+                    weights = np.ones(targets.shape)
+                    weights[0] = 5
+                    weights = weights / weights.sum()
+                    self.adaBoost.train(train, targets, weights)
+                    self.indices = self.adaBoost.features()
+                    self.dataChanged = False
 
-        with measureTime("Updating particles"):
-            self.pf.updateParticles()
-        with measureTime("Calculating particle features"):
-            particle_features = self.calculateParticleFeatures()
-        with measureTime("Scoring particles:"):
-            probabilities = self.adaBoost.predict(particle_features)
-        with measureTime("Updating weights:"):
-            self.pf.updateWeights(probabilities)
-        with measureTime("Scoring target particle:"):
-            targetVector = abc.doSomething(
-                image,
-                np.array([self.target]).astype(np.float32),
-                self.features,
-                self.indices)
-            self.targetScore = self.adaBoost.predict(targetVector)
-            print "Score {0}, ".format(self.targetScore)
-        with measureTime("Generating new samples:"):
-            self.generateNewSamples(config.NEW_SAMPLES_PER_ITERATION)
+            with measureTime("Updating particles", self.debug):
+                self.pf.updateParticles()
+            with measureTime("Calculating particle features", self.debug):
+                particle_features = self.calculateParticleFeatures()
+            with measureTime("Scoring particles:", self.debug):
+                probabilities = self.adaBoost.predict(particle_features)
+            with measureTime("Updating weights:", self.debug):
+                self.pf.updateWeights(probabilities)
+            with measureTime("Scoring target particle:", self.debug):
+                targetVector = abc.doSomething(
+                    image,
+                    np.array([self.target]).astype(np.float32),
+                    self.features,
+                    self.indices)
+                self.targetScore = self.adaBoost.predict(targetVector)
+                if self.targetScore < config.TRESHOLD_PROB:
+                    self.valid = False
+                else:
+                    self.valid = True
+                print "Score {0}, ".format(self.targetScore)
+            with measureTime("Generating new samples:", self.debug):
+                self.generateNewSamples(config.NEW_SAMPLES_PER_ITERATION)
 
 
         self.iterations += 1
@@ -117,11 +127,13 @@ class Algorithm:
                 self.neg = feature_vector[:-1, :]
                 positive = feature_vector[-1, :].reshape(1, feature_vector.shape[1])
                 self.pos = positive
+            self.dataChanged = True
         else:
             print "Probability of estimation is low. Not updating train data."
 
 
     def drawParticles(self, image):
+        print self.particles.shape
         for particle in self.particles:
             cx = int(particle[0] + particle[2] / 2)
             cy = int(particle[1] + particle[3] / 2)
