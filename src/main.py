@@ -98,7 +98,8 @@ def algoMode():
 
         utils.drawTarget(image, target)
         targetImage = utils.drawParticle(image, target)
-        algo.drawFeatures(targetImage)
+        if drawParticles:
+            algo.drawFeatures(targetImage)
         targetImage = cv2.resize(targetImage, (targetImage.shape[1]*2, targetImage.shape[0]*2))
         cv2.imshow("particle", targetImage)        
         print "Frame: {0}".format(algo.iterations)
