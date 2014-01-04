@@ -22,6 +22,12 @@ def drawParticle(image, target):
     image = cropImage(image, target)
     return image
 
+def write(name, filename, locations):
+    with open(name, "w") as f:
+        f.write("./" + filename + ".avi\n")
+        for i, target in enumerate(locations):
+            f.write("{} {} {} {} {}\n".format(i, *target))
+
 def drawTarget(image, target, color=(0,0,0)):
     cv2.rectangle(image, (int(target[0]), int(target[1])), (
         int(target[0] + target[2]), int(target[1] + target[3])), color)
@@ -61,7 +67,7 @@ def rectangleGenerator(height,
     targetRect = Rect(invalid[0], invalid[1], invalid[2], invalid[3])
     while i < num:
         x1, y1 = random.uniform(0, height), random.uniform(0, width)
-        h, w = invalid[2] + random.uniform(-10, 10), invalid[3] + random.unfirom(-10, 10)
+        h, w = invalid[2] + random.uniform(-30, 30), invalid[3] + random.uniform(-30, 30)
         #print h, w
         if h > 5 and w > 5 and h < height and w < width:    
             rectangle = np.array([x1, y1, h, w])

@@ -23,6 +23,7 @@ class Meanshift(object):
         self.target = target
         self.setup()
         self.scale = 1
+        self.valid = True
         self.kernelChanged = False
         self.pf = particle.ParticleFilter(
             target, 30, image.shape[:2])
@@ -77,40 +78,41 @@ class Meanshift(object):
         self.iterations += 1
 
 
-camera = False
+if __name__ == "__main__":
+    camera = False
 
-algo = Meanshift()
+    algo = Meanshift()
 
 
-filename, target = utils.loadVideoFromFile("Vid_A_ball")
-if camera:
-    capture = cv2.VideoCapture(0)
-else:
-    capture = cv2.VideoCapture(filename)
-ret ,frame = capture.read()
-
-cv2.namedWindow("img2")
-particle_utils.initializeMeanshiftSlider(algo, "img2")
-
-algo.start(frame,  target)
-while(1):
+    filename, target = utils.loadVideoFromFile("Vid_A_ball")
+    if camera:
+        capture = cv2.VideoCapture(0)
+    else:
+        capture = cv2.VideoCapture(filename)
     ret ,frame = capture.read()
-    if ret == True:
-        algo.next(frame)
 
-        # Draw it on image
-        x,y,w,h = algo.target
-        cv2.rectangle(frame, (int(x),int(y)), (int(x+w),int(y+h)), 255,2)
-        cv2.imshow('img2', frame)
-        cv2.imshow('prob', algo.dst)
+    cv2.namedWindow("img2")
+    particle_utils.initializeMeanshiftSlider(algo, "img2")
 
-        k = cv2.waitKey(60) & 0xff
-        if k == 27 or algo.iterations == 10000:
-            img2.shape
+    algo.start(frame,  target)
+    while(1):
+        ret ,frame = capture.read()
+        if ret == True:
+            algo.next(frame)
+
+            # Draw it on image
+            x,y,w,h = algo.target
+            cv2.rectangle(frame, (int(x),int(y)), (int(x+w),int(y+h)), 255,2)
+            cv2.imshow('img2', frame)
+            cv2.imshow('prob', algo.dst)
+
+            k = cv2.waitKey(60) & 0xff
+            if k == 27 or algo.iterations == 10000:
+                img2.shape
+                break
+
+        else:
             break
 
-    else:
-        break
-
-cv2.destroyAllWindows()
-cap.release()
+    cv2.destroyAllWindows()
+    cap.release()

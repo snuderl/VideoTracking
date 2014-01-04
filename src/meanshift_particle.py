@@ -30,6 +30,7 @@ class MeanshiftParticleAlgorithm:
         self.roi = target
         self.initial = image
         self.image = image
+        self.valid = True
         self.setup()
         self.pf = particle.ParticleFilter(
             target, 30, image.shape[:2], 0)
@@ -69,7 +70,8 @@ class MeanshiftParticleAlgorithm:
         for particle in self.particles:
             x1, x2, x3, x4 = particle[:4].astype(np.int32)
             ret, track_window = cv2.meanShift(dst, (x1, x2, x3, x4), term_crit)
-            particle[:4] = track_window
+            particle[:2] = track_window[:2]
+            track_window = particle[:4]
 
             f = utils.cropImage(hsv, track_window)
             mask = cv2.inRange(f, np.array((0., 60.,32.)), np.array((180.,255.,255.)))
@@ -86,42 +88,44 @@ class MeanshiftParticleAlgorithm:
 
         self.iterations += 1
 
-algo = MeanshiftParticleAlgorithm()
-camera = False
-filename, target = utils.loadVideoFromFile("Vid_A_ball")
-if camera:
-    capture = cv2.VideoCapture(0)
-else:
-    capture = cv2.VideoCapture(filename)
-ret, frame = capture.read()
-algo.start(frame,  target)
 
-cv2.namedWindow("img2")
-cv2.namedWindow("options")
-particle_utils.initializeParticleSlider(algo.pf, "options", 10, 60, 0)
-particle_utils.initializeMeanshiftSlider(algo, "options")
+if __name__ == "__main__":
+    algo = MeanshiftParticleAlgorithm()
+    camera = False
+    filename, target = utils.loadVideoFromFile("Vid_A_ball")
+    if camera:
+        capture = cv2.VideoCapture(0)
+    else:
+        capture = cv2.VideoCapture(filename)
+    ret, frame = capture.read()
+    algo.start(frame,  target)
 
-while(1):
-    ret ,frame = capture.read()
+    cv2.namedWindow("img2")
+    cv2.namedWindow("options")
+    particle_utils.initializeParticleSlider(algo.pf, "options", 10, 60, 0)
+    particle_utils.initializeMeanshiftSlider(algo, "options")
 
-    if ret == True:
-        algo.next(frame)
+    while(1):
+        ret ,frame = capture.read()
 
-        # Draw it on image
-        x,y,w,h = algo.best
-        cv2.rectangle(frame, (x,y), (x+w,y+h), 255,2)
-        particle_utils.drawParticles(frame, algo.pf)
-        cv2.imshow('img2', frame)
-        cv2.imshow('prob', algo.dst)
+        if ret == True:
+            algo.next(frame)
 
-        k = cv2.waitKey(60) & 0xff
-        if k == 27 or algo.iterations == 10000:
-            img2.shape
+            # Draw it on image
+            x,y,w,h = algo.best
+            cv2.rectangle(frame, (x,y), (x+w,y+h), 255,2)
+            particle_utils.drawParticles(frame, algo.pf)
+            cv2.imshow('img2', frame)
+            cv2.imshow('prob', algo.dst)
+
+            k = cv2.waitKey(60) & 0xff
+            if k == 27 or algo.iterations == 10000:
+                img2.shape
+                break
+
+        else:
             break
 
-    else:
-        break
-
-cv2.destroyAllWindows()
-cap.release()
+    cv2.destroyAllWindows()
+    cap.release()
 

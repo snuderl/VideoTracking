@@ -15,7 +15,7 @@ class Trainer:
         # self.trainer = ExtraTreesClassifier(
         #     max_features=self.n, n_estimators=self.n)
         self.trainer = RandomForestClassifier(
-            max_features=self.n, n_estimators=15, max_depth=3)
+            max_features=self.n, n_estimators=12, max_depth=3)
         
     def features(self):
         ### Take self.n best features, or less

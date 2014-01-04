@@ -7,7 +7,8 @@ import utils
 import particle_utils
 
 
-camera = True
+
+camera = False
 
 
 
@@ -19,6 +20,7 @@ filename = "Vid_C_juice"
 filename = "Vid_B_cup"
 
 
+filename, target = utils.loadVideoFromFile("Vid_I_person_crossing")
 
 
 cv2.namedWindow("video")
@@ -94,7 +96,6 @@ def setupMode():
 
 iterationCount = 0
 
-filename, target = utils.loadVideoFromFile("Vid_B_cup")
 if camera:
     capture = cv2.VideoCapture(0)
     started = False
@@ -103,12 +104,6 @@ else:
     capture = cv2.VideoCapture(filename)
     started = True
     mode = algoMode
-
-def write(name, locations):
-    with open(name, "w") as f:
-        f.write("./" + filename + ".avi\n")
-        for i, target in enumerate(locations):
-            f.write("{} {} {} {} {}\n".format(i, *target))
 
 
 
@@ -125,7 +120,7 @@ if __name__ == "__main__":
                 image = cv2.flip(image, 1)
             else:
                 algo.start(image, target)
-                particle_utils.initializeParticleSlider(algo.pf, "options", 2000, 60, 60)
+                particle_utils.initializeParticleSlider(algo.pf, "options")
                 particle_utils.drawParticles(image, algo.pf)
                 cv2.imshow("video", image)
 
@@ -155,7 +150,7 @@ if __name__ == "__main__":
                 particle_utils.drawParticles(image, algo.pf)
                 cv2.imshow("video", image)
 
-        write("../data/Tracked/" + filename + ".txt", locations)
+        #utils.write("../data/Tracked/" + filename + ".txt", filename, locations)
     except KeyboardInterrupt:
         print "Caught KeyboardInterrupt, terminating workers"
         cv2.destroyWindow ("test")
