@@ -42,8 +42,7 @@ def process(inFile, outFile, targets):
 
 
 path = "../data/"
-files = [ f for f in listdir(path) if isfile(join(path,f)) ]
-files = [f for f in files if f.startswith("Vid_I")]
+files = [f for f in listdir(path) if isfile(join(path,f))]
 videos = [x for x in files if x.endswith(".avi")]
 texts = [x for x in files if x.endswith(".txt")]
 

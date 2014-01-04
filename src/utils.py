@@ -4,7 +4,18 @@ from pygame import Rect
 import time
 import cv2
 from contextlib import contextmanager
+from os import listdir
+from os.path import isfile, join
 
+def loadVideoFromFile(name, directory = "../data/", ext=".avi"):
+
+    files = [f for f in listdir(directory) if isfile(join(directory,f))]
+    txtFile = [f for f in files if f.startswith(name) and f.endswith(".txt")][0]
+    with open(join(directory, txtFile)) as f:
+        line = f.readlines()[1]
+        coordinates = map(float, line.split(" ")[1:])
+    x,y,w,h = coordinates
+    return join(directory, name + ext), (x * 320, y * 240, w * 320, h * 240)
 
 def drawParticle(image, target):
     image = image.copy()

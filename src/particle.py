@@ -26,7 +26,8 @@ class ParticleFilter():
         #np.clip(self.particles[:,1], 0, self.bounds[1], self.particles[:,1])
 
         # Add noise to w,h
-        self.particles[:, 2:4] += random.normal(0, SIGMA_size, (self.count, 2))
+        if SIGMA_size > 0.01:
+            self.particles[:, 2:4] += random.normal(0, SIGMA_size, (self.count, 2))
         #np.clip(self.particles[:,2], 1, self.bounds[0], self.particles[:,2])
         #np.clip(self.particles[:,3], 1, self.bounds[1], self.particles[:,3])
         # Add noise to velocities and clip

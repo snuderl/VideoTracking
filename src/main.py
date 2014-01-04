@@ -8,12 +8,9 @@ import utils
 
 camera = False
 
-directory = "../data/"
-ext = ".avi"
-filename = "Vid_A_ball"
-target = (200, 110, 50, 55)
 
 
+filename = "Vid_B_cup"
 
 #filename = "Vid_I_person_crossing"
 #target = (0.337266 *320, 0.193971 *240, 0.174041 *320, 0.650066* 240)
@@ -32,10 +29,12 @@ target = (0.410029 * 320, 0.208388 * 240, 0.114061 * 320, 0.373526 * 240)
 filename = "Vid_B_cup"
 target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
-filename = "Vid_E_person_partially_occluded"
-target = (0.434343*320, 0.18461*240, 0.167388*320, 0.675*240)
-target = list(target)
 
+filename = utils.loadVideoFromFile("Vid_A_ball")
+if camera:
+    capture = cv2.VideoCapture(0)
+else:
+    capture = cv2.VideoCapture(filename)
 
 
 cv2.namedWindow("video")
