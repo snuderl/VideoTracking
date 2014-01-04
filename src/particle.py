@@ -1,23 +1,26 @@
 import numpy as np
 from numpy import random
 
-SIGMA_velocity = 6.4 
-SIGMA_size = 0.64
+
 
 # State is represented as a numpy array
 ### [x, y, w, h, vx, vy, weight]
 MAX_velocity = 35
 
 
+
+
 class ParticleFilter():
 
-    def __init__(self, target, count, bounds):
+    def __init__(self, target, count, bounds, SIGMA_size=0.64, SIGMA_velocity=6.4):
         self.count = count
         self.target = np.array(target)
         self.particles = createInitialParticles(self.target, count)
         self.iterations = 0
         self.bounds = bounds
         self.deg = 0
+        self.SIGMA_size = SIGMA_size
+        self.SIGMA_velocity = SIGMA_velocity
 
     def updateParticles(self):
         # Update positions with velocity
@@ -26,13 +29,13 @@ class ParticleFilter():
         #np.clip(self.particles[:,1], 0, self.bounds[1], self.particles[:,1])
 
         # Add noise to w,h
-        if SIGMA_size > 0.01:
-            self.particles[:, 2:4] += random.normal(0, SIGMA_size, (self.count, 2))
+        if self.SIGMA_size > 0.0001:
+            self.particles[:, 2:4] += random.normal(0, self.SIGMA_size, (self.particles.shape[0], 2))
         #np.clip(self.particles[:,2], 1, self.bounds[0], self.particles[:,2])
         #np.clip(self.particles[:,3], 1, self.bounds[1], self.particles[:,3])
         # Add noise to velocities and clip
         self.particles[:, 4:6] += random.normal(
-            0, SIGMA_velocity, (self.count, 2))
+            0, self.SIGMA_velocity, (self.particles.shape[0], 2))
         #np.clip(self.particles[:,4:6], -MAX_velocity,MAX_velocity, self.particles[:,4:6])
 
         lb = [0, 0, 1, 1, -MAX_velocity, -MAX_velocity, 0]
@@ -75,7 +78,7 @@ class ParticleFilter():
     def resample(self):
         # Sample acording to weights
         indices = random.choice(
-            range(0, self.count), self.count, p=self.particles[:, 6])
+            range(0, self.particles.shape[0]), self.count, p=self.particles[:, 6])
         # Update particles with new samples
         self.particles = self.particles[indices]
 
@@ -96,7 +99,7 @@ def particleToString(particle):
 
 def createInitialParticles(target, count):
     '''Returns a matrix where each row represents the state of a particle'''
-    velocities = random.normal(0, SIGMA_velocity, (count, 2))
+    velocities = random.normal(0, 6.4, (count, 2))
 
     # Repeat target count times
     targets = np.tile(target, (count, 1))

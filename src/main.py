@@ -76,17 +76,10 @@ def onStart(x):
         mode = algoMode
 
 
-drawParticles = False
-def drawParticlesState(x):
-    global drawParticles    
-    if x == 0:
-        drawParticles = False
-    elif x==1:
-        drawParticles = True
+
 
 cv2.setMouseCallback("video", onMouse, param=None)
 cv2.createTrackbar("Setup - Run", "video", 0, 1, onStart)
-cv2.createTrackbar("Draw particles", "video", 0, 1, drawParticlesState)
 
 def algoMode():
     global target
