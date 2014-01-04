@@ -97,8 +97,9 @@ ret, frame = capture.read()
 algo.start(frame,  target)
 
 cv2.namedWindow("img2")
-particle_utils.initializeParticleSlider(algo.pf, "img2", 10, 60, 0)
-particle_utils.initializeMeanshiftSlider(algo, "img2")
+cv2.namedWindow("options")
+particle_utils.initializeParticleSlider(algo.pf, "options", 10, 60, 0)
+particle_utils.initializeMeanshiftSlider(algo, "options")
 
 while(1):
     ret ,frame = capture.read()

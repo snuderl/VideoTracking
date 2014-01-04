@@ -341,7 +341,8 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
                 std::cout << "Inner cant be greater than outer" << std::endl;
             }
 
-			out.at<double>(i, indice) = sum / (width * height);
+			//out.at<double>(i, indice) = sum / (width * height);
+            out.at<double>(i, indice) = sum;
 		}
 		
 	}

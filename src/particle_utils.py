@@ -1,7 +1,7 @@
 import cv2
 
 drawParticles = False
-def initializeParticleSlider(pf, name, particleCount = 10, sigmaSpeed=6, sigmaSize=6):
+def initializeParticleSlider(pf, name, particleCount = 10, sigmaSpeed=6, sigmaSize=6, probLambda=15):
 
 	def setParticleCount(x):
 		if x > 5:
@@ -15,14 +15,22 @@ def initializeParticleSlider(pf, name, particleCount = 10, sigmaSpeed=6, sigmaSi
 		if x > 0:
 			pf.SIGMA_size = x / 100.
 
+
+	def setProbLambda(x):
+		if x > 0:
+			pf.probLambda = x
+
 	cv2.createTrackbar("Num particles", name, 5, 2000, setParticleCount)
-	cv2.setTrackbarPos("Num particles", name, particleCount)
+	cv2.setTrackbarPos("Num particles", name, pf.count)
 
 	cv2.createTrackbar("Sigma speed / 10", name, 1, 200, setSigmaSpeed)
-	cv2.setTrackbarPos("Sigma speed / 10", name, sigmaSpeed)
+	cv2.setTrackbarPos("Sigma speed / 10", name, int(pf.SIGMA_velocity)*10)
 
 	cv2.createTrackbar("Sigma size / 100", name, 0, 100, setSigmaSize)
-	cv2.setTrackbarPos("Sigma size / 100", name, sigmaSize)
+	cv2.setTrackbarPos("Sigma size / 100", name, int(pf.SIGMA_size)*100)
+
+	cv2.createTrackbar("Probability lambda", name, 1, 100, setProbLambda)
+	cv2.setTrackbarPos("Probability lambda", name, pf.probLambda)
 
 def drawParticles(image, pf):
     for particle in pf.particles:

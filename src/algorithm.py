@@ -132,6 +132,13 @@ class Algorithm:
             print "Probability of estimation is low. Not updating train data."
 
 
+    def drawParticles(self, image):
+        for particle in self.particles:
+            cx = int(particle[0] + particle[2] / 2)
+            cy = int(particle[1] + particle[3] / 2)
+            cv2.circle(image, (cx, cy), 2, 200, 2)
+
+
 
     def calculateParticleFeatures(self):
         image = self.image
@@ -149,6 +156,16 @@ class Algorithm:
             particle_features = pysomemodule.ABC("ab").doSomething(
                 image, particles, self.features, self.indices)
         return particle_features
+
+    def drawFeatures(self, image):
+        h = image.shape[0]
+        w = image.shape[1]
+        features = self.features.copy()
+        features[:,0] = features[:,0] * w
+        features[:,1] = features[:,1] * h
+        features[:,2] = features[:,2] * w
+        features[:,3] = features[:,3] * h
+        self.adaBoost.drawFeatures(image, features)
 
 def call(*args):
     features = pysomemodule.ABC("ab").doSomething(*args)

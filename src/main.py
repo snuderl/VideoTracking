@@ -4,37 +4,21 @@ import os
 from utils import measureTime
 from algorithm import Algorithm
 import utils
+import particle_utils
 
 
-camera = False
+camera = True
 
 
 
 filename = "Vid_B_cup"
-
-#filename = "Vid_I_person_crossing"
-#target = (0.337266 *320, 0.193971 *240, 0.174041 *320, 0.650066* 240)
-
-
-#filename = "Vid_D_person"
-#target = (0.431753*320, 0.240421*240, 0.126437 *320, 0.5431031*240)
-
-#filename = "Vid_C_juice"
-#target = (0.410029*320, 0.208388*240, 0.114061*320, 0.373526*240)
-
-
-
+filename = "Vid_I_person_crossing"
+filename = "Vid_D_person"
 filename = "Vid_C_juice"
-target = (0.410029 * 320, 0.208388 * 240, 0.114061 * 320, 0.373526 * 240)
+filename = "Vid_C_juice"
 filename = "Vid_B_cup"
-target = (0.38960 * 320, 0.384615 * 240, 0.146011 * 320, 0.2440651 * 240)
 
 
-filename = utils.loadVideoFromFile("Vid_A_ball")
-if camera:
-    capture = cv2.VideoCapture(0)
-else:
-    capture = cv2.VideoCapture(filename)
 
 
 cv2.namedWindow("video")
@@ -110,12 +94,13 @@ def setupMode():
 
 iterationCount = 0
 
+filename, target = utils.loadVideoFromFile("Vid_B_cup")
 if camera:
     capture = cv2.VideoCapture(0)
     started = False
     mode = setupMode
 else:
-    capture = cv2.VideoCapture(directory + filename + ext)
+    capture = cv2.VideoCapture(filename)
     started = True
     mode = algoMode
 
@@ -126,10 +111,13 @@ def write(name, locations):
             f.write("{} {} {} {} {}\n".format(i, *target))
 
 
+
 locations = []
 if __name__ == "__main__":
     try:
         algo = Algorithm(1)
+
+        cv2.namedWindow("options")
         if(capture.isOpened):
             retval, image = capture.read()
             w,h = image.shape[0], image.shape[1]
@@ -137,6 +125,16 @@ if __name__ == "__main__":
                 image = cv2.flip(image, 1)
             else:
                 algo.start(image, target)
+                particle_utils.initializeParticleSlider(algo.pf, "options", 2000, 60, 60)
+                particle_utils.drawParticles(image, algo.pf)
+                cv2.imshow("video", image)
+
+        while True:
+
+            key = cv2.waitKey(10) & 0xFF 
+            if key == ord("c"):
+                break
+
         while retval:
             with measureTime("Frame processed in", True):
                 key = cv2.waitKey(10) & 0xFF
@@ -154,8 +152,7 @@ if __name__ == "__main__":
                 iterationCount += 1
                 mode()
                     
-                if drawParticles:
-                    algo.drawParticles(image)
+                particle_utils.drawParticles(image, algo.pf)
                 cv2.imshow("video", image)
 
         write("../data/Tracked/" + filename + ".txt", locations)

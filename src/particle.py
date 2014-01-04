@@ -21,6 +21,7 @@ class ParticleFilter():
         self.deg = 0
         self.SIGMA_size = SIGMA_size
         self.SIGMA_velocity = SIGMA_velocity
+        self.probLambda = 15
 
     def updateParticles(self):
         # Update positions with velocity
@@ -53,11 +54,10 @@ class ParticleFilter():
         # TODO update weight
 
     def updateWeights(self, scores):
-        lam = 25
         # We have to clip the scores so they dont get to big after exponiating.
         # They should be between 0 and 1 regardles...
         np.clip(scores, 0, 1., scores)
-        scores = np.exp(lam * scores)
+        scores = np.exp(self.probLambda * scores)
         total = np.sum(scores)
         self.particles[:, 6] = scores / total
         assert np.abs(np.sum(self.particles[:, 6]) - 1) < 0.1
