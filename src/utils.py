@@ -61,9 +61,9 @@ def rectangleGenerator(height,
     targetRect = Rect(invalid[0], invalid[1], invalid[2], invalid[3])
     while i < num:
         x1, y1 = random.uniform(0, height), random.uniform(0, width)
-        h, w = random.uniform(5, height), random.uniform(5, width)
+        h, w = invalid[2] + random.uniform(-10, 10), invalid[3] + random.unfirom(-10, 10)
         #print h, w
-        if h > 5 and w > 5:
+        if h > 5 and w > 5 and h < height and w < width:    
             rectangle = np.array([x1, y1, h, w])
             test = Rect(x1, y1, h, w)
             if not targetRect.colliderect(test):
