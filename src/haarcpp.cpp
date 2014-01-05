@@ -1,10 +1,10 @@
 #include <string>    
 #include<boost/python.hpp>
-#include "abc.hpp"
+#include "wrapper.hpp"
 
 using namespace boost::python;
 
-BOOST_PYTHON_MODULE(pysomemodule)
+BOOST_PYTHON_MODULE(haarcpp)
 {
     class_<ABC>("ABC", init<const std::string &>())
       .def(init<const std::string &>())
