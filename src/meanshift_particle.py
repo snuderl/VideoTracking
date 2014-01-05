@@ -33,7 +33,7 @@ class MeanshiftParticleAlgorithm:
         self.valid = True
         self.setup()
         self.pf = particle.ParticleFilter(
-            target, 30, image.shape[:2], 0)
+            target, 10, image.shape[:2], 0)
 
     def setup(self):
         image = self.initial
@@ -84,7 +84,7 @@ class MeanshiftParticleAlgorithm:
         self.pf.updateWeights(1 - np.array(scores))
         self.best = self.target[:4].astype(np.int32)
         self.dst = dst
-        print  max(scores), self.best[2:]
+        #print  max(scores), self.best[2:]
 
         self.iterations += 1
 

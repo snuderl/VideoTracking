@@ -5,7 +5,7 @@ from numpy import random
 
 # State is represented as a numpy array
 ### [x, y, w, h, vx, vy, weight]
-MAX_velocity = 35
+MAX_velocity = 25
 
 
 
@@ -21,7 +21,7 @@ class ParticleFilter():
         self.deg = 0
         self.SIGMA_size = SIGMA_size
         self.SIGMA_velocity = SIGMA_velocity
-        self.probLambda = 15
+        self.probLambda = 12
 
     def updateParticles(self):
         # Update positions with velocity
@@ -48,7 +48,7 @@ class ParticleFilter():
               MAX_velocity,
               1]
         np.clip(self.particles, lb, ub, self.particles)
-        if np.max(self.particles[:, 0]) > self.bounds[0]:
+        if np.max(self.particles[:, 0]) > self.bounds[1]:
             print "Not clipped"
         self.iterations += 1
         # TODO update weight
@@ -67,8 +67,8 @@ class ParticleFilter():
             self.resample()
             self.particles[:,6] = 1 / float(self.count)
             self.deg += 1
-            print self.deg
-            print "Degenerate, resampling"
+            #print self.deg
+            #print "Degenerate, resampling"
 
 
         self.target = self.getTrackedObject()

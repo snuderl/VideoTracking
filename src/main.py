@@ -20,7 +20,7 @@ filename = "Vid_C_juice"
 filename = "Vid_B_cup"
 
 
-filename, target = utils.loadVideoFromFile("Vid_I_person_crossing")
+filename, target = utils.loadVideoFromFile("Vid_A")
 
 
 cv2.namedWindow("video")

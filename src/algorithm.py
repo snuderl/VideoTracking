@@ -45,6 +45,7 @@ class Algorithm:
         # Initialize particles
         self.image = image
         self.pf = particle.ParticleFilter(target, config.PARTICLES, image.shape[:2])
+        self.pf.SIGMA_size = 0.64
         # Generate haar features
         self.features = haar.generateHaarFeatures(config.FEATURES_COUNT).astype(np.float32)
         self.allFeatures = np.array(list(range(0, config.FEATURES_COUNT*3)))
@@ -53,7 +54,7 @@ class Algorithm:
         self.iterations = 0
 
     def next(self, image):
-        with measureTime("Iteration in", self.iterations):
+        with measureTime("Iteration in", self.debug):
             self.image = image
             pos, neg = self.pos, self.neg
             with measureTime("Ada boost learning", self.debug):
@@ -62,7 +63,7 @@ class Algorithm:
                     targets = np.zeros((pos.shape[0] + neg.shape[0]))
                     targets[:pos.shape[0]] = 1  
                     weights = np.ones(targets.shape)
-                    weights[0] = 5
+                    weights[0] = 10
                     weights = weights / weights.sum()
                     self.adaBoost.train(train, targets, weights)
                     self.indices = self.adaBoost.features()
@@ -87,7 +88,8 @@ class Algorithm:
                     self.valid = False
                 else:
                     self.valid = True
-                print "Score {0}, ".format(self.targetScore)
+                if self.debug:
+                    print "Score {0}, ".format(self.targetScore)
             with measureTime("Generating new samples:", self.debug):
                 self.generateNewSamples(config.NEW_SAMPLES_PER_ITERATION)
 
@@ -129,7 +131,8 @@ class Algorithm:
                 self.pos = positive
             self.dataChanged = True
         else:
-            print "Probability of estimation is low. Not updating train data."
+            if self.debug:
+                print "Probability of estimation is low. Not updating train data."
 
 
     def drawParticles(self, image):

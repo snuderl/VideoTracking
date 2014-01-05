@@ -335,7 +335,7 @@ cv::Mat process(cv::Mat image, cv::Mat particles, cv::Mat features, cv::Mat indi
 		
 			
 			double inner = A + D - C - B;
-			double sum = outer - (2 *inner);
+			double sum = (outer - (2 *inner));
 
             if(inner > outer){
                 std::cout << "Inner cant be greater than outer" << std::endl;

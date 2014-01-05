@@ -8,14 +8,13 @@ class Trainer:
 
     def __init__(self, n=32):
         self.n = n
-        self.trainer = AdaBoostClassifier(
-            n_estimators=self.n)        
+        #self.trainer = AdaBoostClassifier(
+        #    n_estimators=self.n)        
         #self.trainer = AdaBoostClassifier(
         #    n_estimators=self.n)
-        # self.trainer = ExtraTreesClassifier(
-        #     max_features=self.n, n_estimators=self.n)
+        #self.trainer = ExtraTreesClassifier()
         self.trainer = RandomForestClassifier(
-            max_features=self.n, n_estimators=12, max_depth=3)
+            max_features=self.n, n_estimators=8, max_depth=3)
         
     def features(self):
         ### Take self.n best features, or less
@@ -28,7 +27,7 @@ class Trainer:
         f = np.array(self.trainer.feature_importances_.argsort()[-positive:][::-1])
         return f 
 
-    def train(self, train, test, weights):
+    def train(self, train, test, weights):        
         self.trainer.fit(train, test, sample_weight=weights)
         self.f = self.features()
         #self.trainer.fit(train, test)

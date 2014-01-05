@@ -27,7 +27,7 @@ def initializeParticleSlider(pf, name, particleCount = 10, sigmaSpeed=6, sigmaSi
 	cv2.setTrackbarPos("Sigma speed / 10", name, int(pf.SIGMA_velocity)*10)
 
 	cv2.createTrackbar("Sigma size / 100", name, 0, 100, setSigmaSize)
-	cv2.setTrackbarPos("Sigma size / 100", name, int(pf.SIGMA_size)*100)
+	cv2.setTrackbarPos("Sigma size / 100", name, int(pf.SIGMA_size*100))
 
 	cv2.createTrackbar("Probability lambda", name, 1, 100, setProbLambda)
 	cv2.setTrackbarPos("Probability lambda", name, pf.probLambda)

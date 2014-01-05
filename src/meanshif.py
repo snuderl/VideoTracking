@@ -73,7 +73,6 @@ class Meanshift(object):
         hist = self.hist(window)
         #self.roi_hist = (self.initial_hist + hist) / 2
         self.dst = dst
-        print self.roi_hist.shape, dst.shape, dst.dtype
 
         self.iterations += 1
 

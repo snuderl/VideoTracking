@@ -15,7 +15,7 @@ def loadVideoFromFile(name, directory = "../data/", ext=".avi"):
         line = f.readlines()[1]
         coordinates = map(float, line.split(" ")[1:])
     x,y,w,h = coordinates
-    return join(directory, name + ext), (x * 320, y * 240, w * 320, h * 240)
+    return join(directory, [f for f in files if f.startswith(name) and f.endswith(".avi")][0]), (x * 320, y * 240, w * 320, h * 240)
 
 def drawParticle(image, target):
     image = image.copy()
@@ -25,7 +25,7 @@ def drawParticle(image, target):
 def write(name, filename, locations):
     with open(name, "w") as f:
         f.write("./" + filename + ".avi\n")
-        for i, target in enumerate(locations):
+        for i, target in enumerate(locations[:-1]):
             f.write("{} {} {} {} {}\n".format(i, *target))
 
 def drawTarget(image, target, color=(0,0,0)):
@@ -33,7 +33,7 @@ def drawTarget(image, target, color=(0,0,0)):
         int(target[0] + target[2]), int(target[1] + target[3])), color)
 
 @contextmanager
-def measureTime(title, switch):
+def measureTime(title, switch=True):
     t1 = time.time()
     yield
     t2 = time.time()

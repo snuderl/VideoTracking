@@ -34,7 +34,8 @@ def process(inFile, outFile, targets, algo):
     w,h = image.shape[:2]
     while retval:       
         retval, image = capture.read()
-        locations.append(np.array(algo.target) / [h, w, h, w])
+        target = np.array(algo.target) / np.array([h, w, h, w], dtype=np.float32)
+        locations.append(target)
         if retval:
             for algo in algorithms:
                 algo.next(image)
@@ -49,7 +50,7 @@ def process(inFile, outFile, targets, algo):
 
 
 path = "../data/"
-files = [f for f in listdir(path) if isfile(join(path,f))]
+files = [f for f in listdir(path) if isfile(join(path,f)) if f.startswith("Vid_C")]
 videos = [x for x in files if x.endswith(".avi")]
 texts = [x for x in files if x.endswith(".txt")]
 
@@ -66,6 +67,11 @@ for video in videos:
             target = map(float, f.readlines()[1].split()[1:])
             targetsCoord.append((target[0]*320, target[1]*240, target[2]*320, target[3]*240))       
 
-    process(path+video, path+"Tracked/"+name + "meanPF", targetsCoord, MeanshiftParticleAlgorithm())
-    process(path+video, path+"Tracked/"+name + "mean", targetsCoord, Meanshift())
-    process(path+video, path+"Tracked/"+name + "PF", targetsCoord, Algorithm(1))
+    with utils.measureTime("meanPF"):
+        process(path+video, path+"Tracked/"+name + "meanPF", targetsCoord, MeanshiftParticleAlgorithm())
+
+    with utils.measureTime("mean"):
+        process(path+video, path+"Tracked/"+name + "mean", targetsCoord, Meanshift())
+
+    with utils.measureTime("PF"):
+        process(path+video, path+"Tracked/"+name + "PF", targetsCoord, Algorithm(1))
