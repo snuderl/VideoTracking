@@ -9,9 +9,9 @@ OPENCV_LIB = `pkg-config --libs opencv`
 OPENCV_CFLAGS = `pkg-config --cflags opencv`
 
 
-TARGET = pysomemodule
-SRC = pysomemodule.cpp abc.cpp
-OBJ = pysomemodule.o abc.o
+TARGET = haarcpp
+SRC = wrapper.cpp haarcpp.cpp
+OBJ = wrapper.o haarcpp.o
 
 $(TARGET).so: $(OBJ)
 	g++ -O3 -mtune=native -march=native -shared $(OBJ) -L$(BOOST_LIB) -lboost_python -L/usr/lib/python$(PYTHON_VERSION)/config -lpython$(PYTHON_VERSION) -o $(TARGET).so $(OPENCV_LIB) 

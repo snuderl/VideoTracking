@@ -4,7 +4,7 @@ import particle
 import haar_features as haar
 import numpy as np
 import utils
-import pysomemodule
+import haarcpp
 import signal
 import cv2
 
@@ -12,7 +12,7 @@ from utils import measureTime
 from multiprocessing import Pool, cpu_count
 
 
-abc = pysomemodule.ABC("ab")
+abc = haarcpp.ABC("ab")
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
@@ -156,7 +156,7 @@ class Algorithm:
                     results.append(self.pool.apply_async(call, [image, particles[size*x:size*(x+1),:], self.features, self.indices]))
             particle_features = np.vstack((map(lambda x: x.get(), results)))
         else:
-            particle_features = pysomemodule.ABC("ab").doSomething(
+            particle_features = haarcpp.ABC("ab").doSomething(
                 image, particles, self.features, self.indices)
         return particle_features
 
@@ -171,7 +171,7 @@ class Algorithm:
         self.adaBoost.drawFeatures(image, features)
 
 def call(*args):
-    features = pysomemodule.ABC("ab").doSomething(*args)
+    features = haarcpp.ABC("ab").doSomething(*args)
     return features
 
 
