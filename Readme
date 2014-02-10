@@ -1,3 +1,6 @@
+Real time video tracking application based on the following [paper](http://ieeexplore.ieee.org/xpl/login.jsp?tp=&arnumber=5650583&url=http%3A%2F%2Fieeexplore.ieee.org%2Fxpls%2Fabs_all.jsp%3Farnumber%3D5650583)
+
+
 Dependencies:
 	Python 2.7
 	Numpy
@@ -9,11 +12,3 @@ Dependencies:
 	OpenCV Python
 	Boost
 	Boost Python
-
-Haar-like feature detection:
-	imamo kvadrat z manjšim poljem temne barve
-	na sliki seštejemo pixle na svetli barvi, in odštejemo vsoto tistih na temni barvi
-Center like:
-	kvadrat ima temno barvi v obliki manjšega kvadrata na sredini prejšnjega
-
-Integral images: omogoča računanje featurjev v konstatnem času
